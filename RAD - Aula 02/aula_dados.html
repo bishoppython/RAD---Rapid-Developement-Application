@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula: Análise de Dados com Python</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --paper: #f5f0e8;
+    --accent: #e84b1a;
+    --accent2: #1a6ee8;
+    --gold: #c9a84c;
+    --code-bg: #1a1a2e;
+    --code-text: #e2e0d8;
+    --muted: #7a7060;
+    --border: #c8bfaa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 3rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 40px;
+    width: 200px; height: 200px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    opacity: 0.1;
+  }
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    max-width: 700px;
+  }
+  header h1 span { color: var(--accent); }
+  .header-meta {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .meta-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 860px; margin: 0 auto; padding: 0 2rem; }
+
+  /* SECTION */
+  section { padding: 3rem 0; border-bottom: 1px solid var(--border); }
+  section:last-child { border-bottom: none; }
+
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    line-height: 1.2;
+  }
+  h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 1.8rem 0 0.7rem;
+    color: var(--accent2);
+  }
+  p { margin-bottom: 1rem; color: #2a2520; font-size: 1rem; }
+
+  /* CONCEITO BOX */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin: 1.5rem 0;
+  }
+  .concept-card {
+    border: 1px solid var(--border);
+    padding: 1.2rem 1.4rem;
+    position: relative;
+    background: white;
+  }
+  .concept-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -0.8rem; left: 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    background: var(--accent);
+    color: white;
+    padding: 0.1rem 0.5rem;
+    letter-spacing: 0.15em;
+  }
+  .concept-card h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+  .concept-card p { font-size: 0.88rem; color: var(--muted); margin: 0; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--gold);
+    background: #fdf8ee;
+    padding: 1rem 1.4rem;
+    margin: 1.5rem 0;
+    font-size: 0.93rem;
+  }
+  .callout strong { color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.8rem; letter-spacing: 0.1em; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 4px;
+    margin: 1.5rem 0;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 var(--border);
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    background: #0d0d1f;
+    border-bottom: 1px solid #2a2a4a;
+  }
+  .code-dots { display: flex; gap: 0.4rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .code-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: #555580;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .copy-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    background: none;
+    border: 1px solid #333360;
+    color: #777799;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: #333360; color: #aaaacc; }
+  .copy-btn.copied { border-color: #28c840; color: #28c840; }
+  pre {
+    padding: 1.4rem 1.2rem;
+    overflow-x: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+    color: var(--code-text);
+  }
+
+  /* Syntax highlighting manual */
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .st { color: #c3e88d; }
+  .cm { color: #546e7a; font-style: italic; }
+  .nm { color: #f78c6c; }
+  .op { color: #89ddff; }
+
+  /* CSV TABLE */
+  .csv-preview {
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+  }
+  th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.6rem 1rem;
+    text-align: left;
+    letter-spacing: 0.1em;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+  tr:nth-child(even) td { background: #f9f5ed; }
+  tr:hover td { background: #f0ead8; }
+
+  /* STEPS */
+  .steps { counter-reset: step; margin: 1.5rem 0; }
+  .step {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: start;
+  }
+  .step-num {
+    width: 2.5rem; height: 2.5rem;
+    background: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-content h4 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+    color: var(--ink);
+  }
+  .step-content p { font-size: 0.9rem; color: var(--muted); margin: 0; }
+
+  /* EXERCISE BOX */
+  .exercise-box {
+    border: 2px solid var(--accent);
+    padding: 2rem;
+    margin: 2rem 0;
+    position: relative;
+    background: white;
+  }
+  .exercise-box::before {
+    content: 'EXERCÍCIO';
+    position: absolute;
+    top: -0.75rem; left: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    background: var(--accent);
+    color: white;
+    padding: 0.2rem 0.8rem;
+  }
+  .exercise-box h3 { color: var(--ink); margin-top: 0; font-size: 1.1rem; }
+
+  /* CHALLENGE LIST */
+  .challenge-list { list-style: none; margin: 1rem 0; }
+  .challenge-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 0.93rem;
+  }
+  .challenge-list li:last-child { border-bottom: none; }
+  .challenge-list li::before {
+    content: attr(data-n);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.1rem 0.4rem;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  /* RESULT PREVIEW */
+  .result-preview {
+    background: #0d1117;
+    border-radius: 4px;
+    padding: 1.2rem 1.4rem;
+    margin: 1rem 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: #8b949e;
+    line-height: 1.8;
+  }
+  .result-preview .hl { color: #79c0ff; }
+  .result-preview .val { color: #a5d6ff; }
+  .result-preview .pos { color: #56d364; }
+  .result-preview .neg { color: #f85149; }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: var(--muted);
+    padding: 2rem;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+  }
+  footer strong { color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid var(--border); }
+  .tab-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: #fff8f5;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  @media (max-width: 600px) {
+    .concept-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-tag">// módulo 01 — ciência de dados</div>
+    <h1>Análise de <span>Dados</span> com Python</h1>
+    <div class="header-meta">
+      <span class="meta-pill">▸ NÍVEL: INICIANTE</span>
+      <span class="meta-pill">▸ DURAÇÃO: ~60 MIN</span>
+      <span class="meta-pill">▸ PLATAFORMA: GOOGLE COLAB</span>
+      <span class="meta-pill">▸ LIBS: PANDAS · MATPLOTLIB</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SEÇÃO 1: CONCEITOS -->
+  <section>
+    <div class="section-num">// 01 — fundamentos</div>
+    <h2>O que são Dados?</h2>
+    <p>Dados são fatos brutos e observações coletadas sobre o mundo. Sozinhos, dados têm pouco valor — é a <strong>análise</strong> que os transforma em <em>informação útil</em> para tomada de decisão.</p>
+
+    <div class="concept-grid">
+      <div class="concept-card" data-num="TIPO 01">
+        <h4>Dados Quantitativos</h4>
+        <p>Representam quantidades numéricas. Ex: idade, salário, temperatura, notas.</p>
+      </div>
+      <div class="concept-card" data-num="TIPO 02">
+        <h4>Dados Qualitativos</h4>
+        <p>Representam categorias ou qualidades. Ex: cidade, cor favorita, cargo.</p>
+      </div>
+      <div class="concept-card" data-num="TIPO 03">
+        <h4>Dados Estruturados</h4>
+        <p>Organizados em tabelas (linhas e colunas). Formato ideal: CSV, Excel, SQL.</p>
+      </div>
+      <div class="concept-card" data-num="TIPO 04">
+        <h4>Dados Não-Estruturados</h4>
+        <p>Sem formato fixo. Ex: textos livres, imagens, vídeos, áudios.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>💡 Conceito-chave</strong><br>
+      Um <strong>dataset</strong> (conjunto de dados) é uma coleção organizada de dados. Nesta aula usaremos um dataset fictício de vendas em formato <strong>.CSV</strong> — o formato mais comum na análise de dados.
+    </div>
+  </section>
+
+  <!-- SEÇÃO 2: PIPELINE -->
+  <section>
+    <div class="section-num">// 02 — processo</div>
+    <h2>Pipeline de Análise de Dados</h2>
+    <p>Todo projeto de análise segue etapas bem definidas. Conhecê-las é fundamental para trabalhar de forma organizada e eficiente.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>COLETA</h4>
+          <p>Obter os dados da fonte — banco de dados, API, planilha, sensor, formulário, etc.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>LIMPEZA</h4>
+          <p>Tratar valores ausentes, remover duplicatas, corrigir erros e padronizar formatos.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>EXPLORAÇÃO (EDA)</h4>
+          <p>Explorar o dataset com estatísticas descritivas e visualizações para entender padrões.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h4>ANÁLISE</h4>
+          <p>Responder perguntas de negócio, identificar tendências, correlações e anomalias.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-content">
+          <h4>COMUNICAÇÃO</h4>
+          <p>Apresentar os resultados com visualizações claras e relatórios para stakeholders.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 3: FERRAMENTAS -->
+  <section>
+    <div class="section-num">// 03 — ferramentas</div>
+    <h2>Bibliotecas Essenciais</h2>
+
+    <h3>▸ PANDAS — manipulação de dados</h3>
+    <p>A biblioteca mais importante para análise de dados em Python. Trabalha com estruturas chamadas <strong>DataFrame</strong> (tabelas) e <strong>Series</strong> (colunas).</p>
+
+    <h3>▸ MATPLOTLIB — visualização</h3>
+    <p>Biblioteca para criação de gráficos. Permite criar histogramas, barras, linhas, pizza e muito mais.</p>
+
+    <h3>▸ GOOGLE COLAB — ambiente</h3>
+    <p>Ambiente de notebooks gratuito do Google. Roda no navegador, sem instalação, com GPU/CPU gratuita e integração com Google Drive.</p>
+  </section>
+
+  <!-- SEÇÃO 4: DATASET -->
+  <section>
+    <div class="section-num">// 04 — dataset</div>
+    <h2>O Dataset: Vendas de uma Livraria</h2>
+    <p>Usaremos um dataset fictício com registros de vendas de uma livraria. Cada linha representa uma venda realizada. Abaixo, um preview das primeiras linhas:</p>
+
+    <div class="csv-preview">
+      <table>
+        <thead>
+          <tr>
+            <th>id_venda</th>
+            <th>data</th>
+            <th>produto</th>
+            <th>categoria</th>
+            <th>quantidade</th>
+            <th>preco_unit</th>
+            <th>vendedor</th>
+            <th>regiao</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>2024-01-03</td><td>Dom Casmurro</td><td>Literatura</td><td>2</td><td>35.90</td><td>Ana Lima</td><td>Sudeste</td></tr>
+          <tr><td>2</td><td>2024-01-05</td><td>Python para Dados</td><td>Tecnologia</td><td>1</td><td>89.90</td><td>Carlos Mendes</td><td>Sul</td></tr>
+          <tr><td>3</td><td>2024-01-07</td><td>O Pequeno Príncipe</td><td>Infantil</td><td>3</td><td>29.90</td><td>Ana Lima</td><td>Nordeste</td></tr>
+          <tr><td>4</td><td>2024-01-10</td><td>Sapiens</td><td>Ciências</td><td>1</td><td>54.90</td><td>Bruno Costa</td><td>Sudeste</td></tr>
+          <tr><td>5</td><td>2024-01-12</td><td>Clean Code</td><td>Tecnologia</td><td>2</td><td>95.00</td><td>Carlos Mendes</td><td>Sul</td></tr>
+          <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>📁 O CSV completo</strong><br>
+      O dataset com 50 registros será criado diretamente no Colab usando código Python — não é necessário fazer upload de nenhum arquivo externo.
+    </div>
+  </section>
+
+  <!-- SEÇÃO 5: EXERCÍCIO -->
+  <section>
+    <div class="section-num">// 05 — prática</div>
+    <h2>Exercício Prático no Google Colab</h2>
+    <p>Abra o Google Colab em <strong>colab.research.google.com</strong>, crie um novo notebook e execute os blocos abaixo em sequência.</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab(event, 'etapa1')">ETAPA 1 — Setup</button>
+      <button class="tab-btn" onclick="showTab(event, 'etapa2')">ETAPA 2 — Dataset</button>
+      <button class="tab-btn" onclick="showTab(event, 'etapa3')">ETAPA 3 — Exploração</button>
+      <button class="tab-btn" onclick="showTab(event, 'etapa4')">ETAPA 4 — Análise</button>
+      <button class="tab-btn" onclick="showTab(event, 'etapa5')">ETAPA 5 — Gráficos</button>
+    </div>
+
+    <!-- ETAPA 1 -->
+    <div id="etapa1" class="tab-content active">
+      <h3>▸ Importando as bibliotecas</h3>
+      <p>O primeiro passo é sempre importar as bibliotecas necessárias. No Colab, pandas e matplotlib já estão instaladas.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <span class="code-label">python — célula 1</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPIAR</button>
+        </div>
+        <pre><span class="cm"># ── Importações ──────────────────────────────────────</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> matplotlib.ticker <span class="kw">as</span> mticker
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># Configurações visuais</span>
+plt.rcParams[<span class="st">'figure.figsize'</span>] <span class="op">=</span> (<span class="nm">10</span>, <span class="nm">5</span>)
+plt.rcParams[<span class="st">'axes.spines.top'</span>] <span class="op">=</span> <span class="kw">False</span>
+plt.rcParams[<span class="st">'axes.spines.right'</span>] <span class="op">=</span> <span class="kw">False</span>
+
+<span class="fn">print</span>(<span class="st">"✅ Bibliotecas importadas com sucesso!"</span>)</pre>
+      </div>
+    </div>
+
+    <!-- ETAPA 2 -->
+    <div id="etapa2" class="tab-content">
+      <h3>▸ Criando o dataset CSV</h3>
+      <p>Vamos gerar um dataset realista com 50 registros de vendas de uma livraria e salvá-lo como arquivo CSV.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <span class="code-label">python — célula 2</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPIAR</button>
+        </div>
+        <pre><span class="cm"># ── Criação do Dataset ───────────────────────────────</span>
+np.random.seed(<span class="nm">42</span>)
+
+produtos <span class="op">=</span> {
+    <span class="st">"Dom Casmurro"</span>:       (<span class="st">"Literatura"</span>, <span class="nm">35.90</span>),
+    <span class="st">"O Pequeno Príncipe"</span>: (<span class="st">"Infantil"</span>,   <span class="nm">29.90</span>),
+    <span class="st">"Sapiens"</span>:             (<span class="st">"Ciências"</span>,   <span class="nm">54.90</span>),
+    <span class="st">"Python para Dados"</span>:  (<span class="st">"Tecnologia"</span>, <span class="nm">89.90</span>),
+    <span class="st">"Clean Code"</span>:         (<span class="st">"Tecnologia"</span>, <span class="nm">95.00</span>),
+    <span class="st">"Harry Potter Vol.1"</span>: (<span class="st">"Fantasia"</span>,   <span class="nm">49.90</span>),
+    <span class="st">"Atomic Habits"</span>:      (<span class="st">"Autoajuda"</span>,  <span class="nm">44.90</span>),
+    <span class="st">"A Arte da Guerra"</span>:   (<span class="st">"Filosofia"</span>,  <span class="nm">32.00</span>),
+    <span class="st">"Cosmos"</span>:             (<span class="st">"Ciências"</span>,   <span class="nm">62.50</span>),
+    <span class="st">"Cem Anos de Solidão"</span>:(<span class="st">"Literatura"</span>, <span class="nm">39.90</span>),
+}
+
+vendedores <span class="op">=</span> [<span class="st">"Ana Lima"</span>, <span class="st">"Carlos Mendes"</span>, <span class="st">"Bruno Costa"</span>, <span class="st">"Fernanda Rocha"</span>]
+regioes    <span class="op">=</span> [<span class="st">"Sudeste"</span>, <span class="st">"Sul"</span>, <span class="st">"Nordeste"</span>, <span class="st">"Norte"</span>, <span class="st">"Centro-Oeste"</span>]
+datas      <span class="op">=</span> pd.date_range(<span class="st">"2024-01-01"</span>, <span class="st">"2024-06-30"</span>, periods<span class="op">=</span><span class="nm">50</span>)
+
+nomes_prod <span class="op">=</span> np.random.choice(<span class="fn">list</span>(produtos.keys()), <span class="nm">50</span>)
+
+dados <span class="op">=</span> {
+    <span class="st">"id_venda"</span>:   <span class="fn">range</span>(<span class="nm">1</span>, <span class="nm">51</span>),
+    <span class="st">"data"</span>:       datas.strftime(<span class="st">"%Y-%m-%d"</span>),
+    <span class="st">"produto"</span>:    nomes_prod,
+    <span class="st">"categoria"</span>:  [produtos[p][<span class="nm">0</span>] <span class="kw">for</span> p <span class="kw">in</span> nomes_prod],
+    <span class="st">"quantidade"</span>: np.random.randint(<span class="nm">1</span>, <span class="nm">6</span>, <span class="nm">50</span>),
+    <span class="st">"preco_unit"</span>: [produtos[p][<span class="nm">1</span>] <span class="kw">for</span> p <span class="kw">in</span> nomes_prod],
+    <span class="st">"vendedor"</span>:   np.random.choice(vendedores, <span class="nm">50</span>),
+    <span class="st">"regiao"</span>:     np.random.choice(regioes, <span class="nm">50</span>),
+}
+
+df <span class="op">=</span> pd.DataFrame(dados)
+df[<span class="st">"total_venda"</span>] <span class="op">=</span> df[<span class="st">"quantidade"</span>] <span class="op">*</span> df[<span class="st">"preco_unit"</span>]
+
+<span class="cm"># Salva como CSV</span>
+df.to_csv(<span class="st">"vendas_livraria.csv"</span>, index<span class="op">=</span><span class="kw">False</span>)
+
+<span class="fn">print</span>(<span class="st">f"✅ Dataset criado! Shape: {df.shape}"</span>)
+<span class="fn">print</span>(<span class="st">f"   Colunas: {list(df.columns)}"</span>)
+df.head()</pre>
+      </div>
+    </div>
+
+    <!-- ETAPA 3 -->
+    <div id="etapa3" class="tab-content">
+      <h3>▸ Explorando o dataset (EDA)</h3>
+      <p>Antes de analisar, precisamos entender a estrutura e a qualidade dos dados.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <span class="code-label">python — célula 3</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPIAR</button>
+        </div>
+        <pre><span class="cm"># ── Exploração Inicial ───────────────────────────────</span>
+df <span class="op">=</span> pd.read_csv(<span class="st">"vendas_livraria.csv"</span>)
+
+<span class="fn">print</span>(<span class="st">"═" * 45</span>)
+<span class="fn">print</span>(<span class="st">"📋 INFORMAÇÕES DO DATASET"</span>)
+<span class="fn">print</span>(<span class="st">"═" * 45</span>)
+<span class="fn">print</span>(<span class="st">f"Linhas:   {df.shape[0]}"</span>)
+<span class="fn">print</span>(<span class="st">f"Colunas:  {df.shape[1]}"</span>)
+
+<span class="fn">print</span>(<span class="st">"\n📊 TIPOS DE DADOS:"</span>)
+<span class="fn">print</span>(df.dtypes)
+
+<span class="fn">print</span>(<span class="st">"\n🔍 VALORES NULOS:"</span>)
+<span class="fn">print</span>(df.isnull().<span class="fn">sum</span>())
+
+<span class="fn">print</span>(<span class="st">"\n📈 ESTATÍSTICAS DESCRITIVAS:"</span>)
+df[[<span class="st">"quantidade"</span>, <span class="st">"preco_unit"</span>, <span class="st">"total_venda"</span>]].describe().<span class="fn">round</span>(<span class="nm">2</span>)</pre>
+      </div>
+
+      <div class="result-preview">
+        <span class="hl">═══════════════════════════════════════════════</span><br>
+        <span class="hl">📋 INFORMAÇÕES DO DATASET</span><br>
+        <span class="hl">═══════════════════════════════════════════════</span><br>
+        Linhas:   <span class="val">50</span><br>
+        Colunas:  <span class="val">9</span><br><br>
+        <span class="hl">📊 TIPOS DE DADOS:</span><br>
+        id_venda      <span class="pos">int64</span><br>
+        data          <span class="pos">object</span><br>
+        produto       <span class="pos">object</span><br>
+        total_venda   <span class="pos">float64</span><br><br>
+        <span class="hl">🔍 VALORES NULOS:</span><br>
+        <span class="pos">Nenhum valor nulo encontrado ✓</span>
+      </div>
+    </div>
+
+    <!-- ETAPA 4 -->
+    <div id="etapa4" class="tab-content">
+      <h3>▸ Análise das vendas</h3>
+      <p>Agora vamos responder perguntas de negócio usando agrupamentos e cálculos com pandas.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <span class="code-label">python — célula 4</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPIAR</button>
+        </div>
+        <pre><span class="cm"># ── Análise de Vendas ────────────────────────────────</span>
+
+<span class="cm"># 1. Total faturado</span>
+total <span class="op">=</span> df[<span class="st">"total_venda"</span>].<span class="fn">sum</span>()
+<span class="fn">print</span>(<span class="st">f"💰 Faturamento Total: R$ {total:,.2f}"</span>)
+
+<span class="cm"># 2. Faturamento por categoria</span>
+<span class="fn">print</span>(<span class="st">"\n📦 Faturamento por Categoria:"</span>)
+cat_fat <span class="op">=</span> (df.groupby(<span class="st">"categoria"</span>)[<span class="st">"total_venda"</span>]
+             .<span class="fn">sum</span>()
+             .sort_values(ascending<span class="op">=</span><span class="kw">False</span>))
+<span class="fn">print</span>(cat_fat.<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="st">f"R$ {x:,.2f}"</span>))
+
+<span class="cm"># 3. Melhor vendedor</span>
+<span class="fn">print</span>(<span class="st">"\n🏆 Ranking de Vendedores:"</span>)
+vend_rank <span class="op">=</span> (df.groupby(<span class="st">"vendedor"</span>)[<span class="st">"total_venda"</span>]
+               .<span class="fn">sum</span>()
+               .sort_values(ascending<span class="op">=</span><span class="kw">False</span>))
+<span class="fn">print</span>(vend_rank.<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="st">f"R$ {x:,.2f}"</span>))
+
+<span class="cm"># 4. Produto mais vendido (em quantidade)</span>
+<span class="fn">print</span>(<span class="st">"\n📚 Top 3 Produtos (qtd vendida):"</span>)
+top_prod <span class="op">=</span> (df.groupby(<span class="st">"produto"</span>)[<span class="st">"quantidade"</span>]
+              .<span class="fn">sum</span>()
+              .sort_values(ascending<span class="op">=</span><span class="kw">False</span>)
+              .head(<span class="nm">3</span>))
+<span class="fn">print</span>(top_prod)
+
+<span class="cm"># 5. Venda média por região</span>
+<span class="fn">print</span>(<span class="st">"\n🗺️  Ticket Médio por Região:"</span>)
+reg_media <span class="op">=</span> (df.groupby(<span class="st">"regiao"</span>)[<span class="st">"total_venda"</span>]
+               .<span class="fn">mean</span>()
+               .sort_values(ascending<span class="op">=</span><span class="kw">False</span>)
+               .<span class="fn">round</span>(<span class="nm">2</span>))
+<span class="fn">print</span>(reg_media.<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="st">f"R$ {x:,.2f}"</span>))</pre>
+      </div>
+    </div>
+
+    <!-- ETAPA 5 -->
+    <div id="etapa5" class="tab-content">
+      <h3>▸ Visualizações com Matplotlib</h3>
+      <p>Dados falam melhor através de gráficos. Vamos criar 3 visualizações para comunicar os insights encontrados.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <span class="code-label">python — célula 5</span>
+          <button class="copy-btn" onclick="copyCode(this)">COPIAR</button>
+        </div>
+        <pre><span class="cm"># ── Visualizações ────────────────────────────────────</span>
+fig, axes <span class="op">=</span> plt.subplots(<span class="nm">1</span>, <span class="nm">3</span>, figsize<span class="op">=</span>(<span class="nm">16</span>, <span class="nm">5</span>))
+fig.suptitle(<span class="st">"Dashboard: Livraria 2024"</span>,
+             fontsize<span class="op">=</span><span class="nm">14</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, y<span class="op">=</span><span class="nm">1.02</span>)
+
+<span class="cm"># --- Gráfico 1: Faturamento por Categoria (barras) ---</span>
+ax1 <span class="op">=</span> axes[<span class="nm">0</span>]
+cores <span class="op">=</span> [<span class="st">"#e84b1a"</span> <span class="kw">if</span> i<span class="op">==</span><span class="nm">0</span> <span class="kw">else</span> <span class="st">"#c8bfaa"</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(cat_fat))]
+ax1.barh(cat_fat.index, cat_fat.values, color<span class="op">=</span>cores)
+ax1.set_title(<span class="st">"Faturamento por Categoria"</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)
+ax1.set_xlabel(<span class="st">"Receita (R$)"</span>)
+ax1.xaxis.set_major_formatter(
+    mticker.FuncFormatter(<span class="kw">lambda</span> x, _: <span class="st">f"R${x/1000:.0f}k"</span>))
+
+<span class="cm"># --- Gráfico 2: Ranking Vendedores (barras verticais) ---</span>
+ax2 <span class="op">=</span> axes[<span class="nm">1</span>]
+ax2.bar(vend_rank.index, vend_rank.values,
+        color<span class="op">=</span>[<span class="st">"#1a6ee8"</span>,<span class="st">"#4a90e8"</span>,<span class="st">"#8ab8f0"</span>,<span class="st">"#c8d8f0"</span>])
+ax2.set_title(<span class="st">"Ranking de Vendedores"</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)
+ax2.set_ylabel(<span class="st">"Total Vendido (R$)"</span>)
+ax2.yaxis.set_major_formatter(
+    mticker.FuncFormatter(<span class="kw">lambda</span> y, _: <span class="st">f"R${y/1000:.0f}k"</span>))
+ax2.tick_params(axis<span class="op">=</span><span class="st">"x"</span>, rotation<span class="op">=</span><span class="nm">15</span>)
+
+<span class="cm"># --- Gráfico 3: Distribuição das Regiões (pizza) ---</span>
+ax3 <span class="op">=</span> axes[<span class="nm">2</span>]
+reg_total <span class="op">=</span> df.groupby(<span class="st">"regiao"</span>)[<span class="st">"total_venda"</span>].<span class="fn">sum</span>()
+ax3.pie(reg_total, labels<span class="op">=</span>reg_total.index,
+        autopct<span class="op">=</span><span class="st">"%1.1f%%"</span>,
+        colors<span class="op">=</span>[<span class="st">"#e84b1a"</span>,<span class="st">"#1a6ee8"</span>,<span class="st">"#c9a84c"</span>,<span class="st">"#28a745"</span>,<span class="st">"#6f42c1"</span>],
+        startangle<span class="op">=</span><span class="nm">90</span>,
+        wedgeprops<span class="op">=</span>{<span class="st">"edgecolor"</span>:<span class="st">"white"</span>, <span class="st">"linewidth"</span>:<span class="nm">2</span>})
+ax3.set_title(<span class="st">"Participação por Região"</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)
+
+plt.tight_layout()
+plt.savefig(<span class="st">"dashboard_livraria.png"</span>, dpi<span class="op">=</span><span class="nm">150</span>, bbox_inches<span class="op">=</span><span class="st">"tight"</span>)
+plt.show()
+<span class="fn">print</span>(<span class="st">"✅ Gráficos salvos em dashboard_livraria.png"</span>)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 6: DESAFIOS -->
+  <section>
+    <div class="section-num">// 06 — desafios</div>
+    <h2>Desafios Para Ir Além</h2>
+    <p>Depois de concluir o exercício base, tente resolver estes desafios para consolidar o aprendizado:</p>
+
+    <div class="exercise-box">
+      <h3>🎯 Desafios Extras</h3>
+      <ul class="challenge-list">
+        <li data-n="D1">Calcule a <strong>evolução do faturamento mês a mês</strong>. Dica: converta a coluna "data" com <code>pd.to_datetime()</code> e use <code>.dt.month</code>.</li>
+        <li data-n="D2">Crie um gráfico de <strong>linha mostrando a tendência de vendas</strong> ao longo do tempo (eixo X: mês, eixo Y: faturamento total).</li>
+        <li data-n="D3">Descubra qual <strong>vendedor tem o maior ticket médio</strong> (não o maior volume, mas a média por venda).</li>
+        <li data-n="D4">Filtre apenas as vendas com <code>total_venda > 200</code> e analise quais categorias dominam as vendas de alto valor.</li>
+        <li data-n="D5"><strong>Adicione 5 linhas com valores nulos</strong> no dataset e escreva código para identificá-los e tratá-los com <code>.fillna()</code> ou <code>.dropna()</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 7: RESUMO -->
+  <section>
+    <div class="section-num">// 07 — síntese</div>
+    <h2>O que Aprendemos Hoje</h2>
+    <div class="concept-grid">
+      <div class="concept-card" data-num="✓ 01">
+        <h4>Conceitos de Dados</h4>
+        <p>Tipos de dados, estrutura de datasets e o pipeline de análise.</p>
+      </div>
+      <div class="concept-card" data-num="✓ 02">
+        <h4>Pandas</h4>
+        <p>Leitura de CSV, exploração com <code>.info()</code>, <code>.describe()</code>, agrupamentos com <code>.groupby()</code>.</p>
+      </div>
+      <div class="concept-card" data-num="✓ 03">
+        <h4>Análise</h4>
+        <p>Calcular faturamento, ranking, ticket médio e filtros com condições.</p>
+      </div>
+      <div class="concept-card" data-num="✓ 04">
+        <h4>Visualização</h4>
+        <p>Criar gráficos de barras, pizza e formatação de eixos com Matplotlib.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <strong>ANÁLISE DE DADOS COM PYTHON</strong> — Módulo 01<br>
+  Google Colab · Pandas · Matplotlib · NumPy
+</footer>
+
+<script>
+function showTab(e, id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  e.target.classList.add('active');
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'COPIADO!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'COPIAR';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
