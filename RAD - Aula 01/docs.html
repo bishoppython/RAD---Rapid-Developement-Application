@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CalcAPI — Documentação</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.25);
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    letter-spacing: 0.08em;
+  }
+
+  .badge::before { content: '●'; font-size: 8px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  h1 {
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    font-family: var(--mono);
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .meta-item span { color: var(--accent2); }
+
+  /* Section headers */
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: var(--mono);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Endpoint card */
+  .endpoint-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .endpoint-card:hover { border-color: var(--accent); }
+
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .method {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .method.post { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.4); }
+  .method.get  { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.35); }
+
+  .path {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .ep-desc { color: var(--muted); font-size: 14px; margin-left: auto; }
+
+  .chevron {
+    margin-left: auto;
+    color: var(--muted);
+    transition: transform 0.25s;
+    font-size: 12px;
+  }
+
+  .endpoint-body {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 20px;
+    gap: 20px;
+    flex-direction: column;
+  }
+
+  .endpoint-card.open .endpoint-body { display: flex; }
+  .endpoint-card.open .chevron { transform: rotate(180deg); }
+
+  /* Code blocks */
+  .code-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: #c4b5fd;
+  }
+
+  .key { color: #67e8f9; }
+  .str { color: #86efac; }
+  .num { color: #fca5a5; }
+  .bool { color: #fde68a; }
+  .comment { color: #4b5563; font-style: italic; }
+
+  /* Params table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,42,63,0.5);
+    vertical-align: top;
+  }
+
+  td:first-child { color: var(--accent2); }
+  td:nth-child(2) { color: var(--yellow); }
+  td:nth-child(3) { color: var(--muted); }
+
+  .required-badge {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,0.3);
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Response codes */
+  .response-codes { display: flex; flex-direction: column; gap: 8px; }
+
+  .response-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .status-code {
+    font-family: var(--mono);
+    font-weight: 600;
+    min-width: 36px;
+  }
+
+  .s200 { color: var(--green); }
+  .s400 { color: var(--yellow); }
+  .s422 { color: var(--red); }
+
+  /* Playground */
+  .playground {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 40px;
+  }
+
+  .playground h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .playground h2::before {
+    content: '▶';
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  .playground-desc { color: var(--muted); font-size: 13px; font-family: var(--mono); margin-bottom: 24px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn:hover { background: #6d28d9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  .response-box {
+    margin-top: 20px;
+    display: none;
+  }
+
+  .response-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .response-status {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .response-status.ok { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .response-status.err { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+  .result-display {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    padding: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Ops grid */
+  .ops-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .op-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .op-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .op-symbol {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--accent2);
+  }
+
+  .op-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Base URL */
+  .base-url {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 32px;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+
+  .base-label { color: var(--muted); font-size: 11px; letter-spacing: 0.1em; }
+  .base-value { color: var(--accent2); }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .ops-grid { grid-template-columns: repeat(2, 1fr); }
+    .ep-desc { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="container">
+
+  <header>
+    <div class="badge">v1.0.0 · REST API</div>
+    <h1>CalcAPI</h1>
+    <p class="subtitle">API de cálculo aritmético — simples, rápida e documentada</p>
+    <div class="meta-row">
+      <div class="meta-item">Base URL: <span>http://localhost:5000</span></div>
+      <div class="meta-item">Formato: <span>application/json</span></div>
+      <div class="meta-item">Auth: <span>Nenhuma</span></div>
+    </div>
+  </header>
+
+  <!-- Ops -->
+  <div class="section-title">Operações disponíveis</div>
+  <div class="ops-grid">
+    <div class="op-card"><span class="op-symbol">+</span><div class="op-name">soma</div></div>
+    <div class="op-card"><span class="op-symbol">−</span><div class="op-name">subtracao</div></div>
+    <div class="op-card"><span class="op-symbol">×</span><div class="op-name">multiplicacao</div></div>
+    <div class="op-card"><span class="op-symbol">÷</span><div class="op-name">divisao</div></div>
+  </div>
+
+  <!-- Base URL -->
+  <div class="base-url">
+    <span class="base-label">BASE</span>
+    <span class="base-value">http://localhost:5000</span>
+  </div>
+
+  <!-- Endpoints -->
+  <div class="section-title">Endpoints</div>
+
+  <!-- POST /calcular -->
+  <div class="endpoint-card open" onclick="toggleCard(this)">
+    <div class="endpoint-header">
+      <span class="method post">POST</span>
+      <span class="path">/calcular</span>
+      <span class="ep-desc">Realiza o cálculo</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div>
+        <div class="code-label">Request Body — application/json</div>
+        <table>
+          <thead>
+            <tr><th>Campo</th><th>Tipo</th><th>Descrição</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr><td>num1</td><td>number</td><td>Primeiro número</td><td><span class="required-badge">obrigatório</span></td></tr>
+            <tr><td>num2</td><td>number</td><td>Segundo número</td><td><span class="required-badge">obrigatório</span></td></tr>
+            <tr><td>operacao</td><td>string</td><td>soma | subtracao | multiplicacao | divisao</td><td><span class="required-badge">obrigatório</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="code-label">Exemplo de requisição</div>
+        <pre>{
+  <span class="key">"num1"</span>: <span class="num">15</span>,
+  <span class="key">"num2"</span>: <span class="num">4</span>,
+  <span class="key">"operacao"</span>: <span class="str">"divisao"</span>
+}</pre>
+      </div>
+      <div>
+        <div class="code-label">Resposta 200 — Sucesso</div>
+        <pre>{
+  <span class="key">"sucesso"</span>: <span class="bool">true</span>,
+  <span class="key">"operacao"</span>: <span class="str">"divisao"</span>,
+  <span class="key">"expressao"</span>: <span class="str">"15 ÷ 4 = 3.75"</span>,
+  <span class="key">"num1"</span>: <span class="num">15</span>,
+  <span class="key">"num2"</span>: <span class="num">4</span>,
+  <span class="key">"resultado"</span>: <span class="num">3.75</span>,
+  <span class="key">"timestamp"</span>: <span class="str">"2026-03-07T14:00:00Z"</span>
+}</pre>
+      </div>
+      <div>
+        <div class="code-label">Códigos de resposta</div>
+        <div class="response-codes">
+          <div class="response-row"><span class="status-code s200">200</span><span>Cálculo realizado com sucesso</span></div>
+          <div class="response-row"><span class="status-code s400">400</span><span>Campos ausentes, tipo inválido ou operação desconhecida</span></div>
+          <div class="response-row"><span class="status-code s422">422</span><span>Divisão por zero</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="code-label">Exemplo curl</div>
+        <pre><span class="comment"># Linux / macOS</span>
+curl -X POST http://localhost:5000/calcular \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"num1": 15, "num2": 4, "operacao": "divisao"}'</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /operacoes -->
+  <div class="endpoint-card" onclick="toggleCard(this)">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/operacoes</span>
+      <span class="ep-desc">Lista operações disponíveis</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div>
+        <div class="code-label">Sem parâmetros</div>
+        <pre>GET http://localhost:5000/operacoes</pre>
+      </div>
+      <div>
+        <div class="code-label">Resposta 200</div>
+        <pre>{
+  <span class="key">"operacoes_disponiveis"</span>: [
+    { <span class="key">"nome"</span>: <span class="str">"soma"</span>,          <span class="key">"simbolo"</span>: <span class="str">"+"</span> },
+    { <span class="key">"nome"</span>: <span class="str">"subtracao"</span>,     <span class="key">"simbolo"</span>: <span class="str">"-"</span> },
+    { <span class="key">"nome"</span>: <span class="str">"multiplicacao"</span>, <span class="key">"simbolo"</span>: <span class="str">"×"</span> },
+    { <span class="key">"nome"</span>: <span class="str">"divisao"</span>,      <span class="key">"simbolo"</span>: <span class="str">"÷"</span> }
+  ]
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /health -->
+  <div class="endpoint-card" onclick="toggleCard(this)">
+    <div class="endpoint-header">
+      <span class="method get">GET</span>
+      <span class="path">/health</span>
+      <span class="ep-desc">Status da API</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div>
+        <div class="code-label">Resposta 200</div>
+        <pre>{ <span class="key">"status"</span>: <span class="str">"ok"</span>, <span class="key">"timestamp"</span>: <span class="str">"2026-03-07T14:00:00Z"</span> }</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Playground -->
+  <div class="playground">
+    <h2>Playground interativo</h2>
+    <p class="playground-desc">Simule chamadas à API diretamente nesta documentação</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>num1</label>
+        <input type="number" id="num1" value="10" step="any"/>
+      </div>
+      <div class="form-group">
+        <label>num2</label>
+        <input type="number" id="num2" value="3" step="any"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+      <label>Operação</label>
+      <select id="operacao">
+        <option value="soma">soma — +</option>
+        <option value="subtracao">subtracao — −</option>
+        <option value="multiplicacao">multiplicacao — ×</option>
+        <option value="divisao" selected>divisao — ÷</option>
+      </select>
+    </div>
+
+    <button class="btn" onclick="simular()">Executar requisição</button>
+
+    <div class="response-box" id="responseBox">
+      <div class="response-header">
+        <span class="response-status" id="responseStatus"></span>
+        <span style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="responseTime"></span>
+      </div>
+      <div class="result-display" id="resultDisplay"></div>
+      <div class="code-label">JSON completo</div>
+      <pre id="responseJson"></pre>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleCard(card) {
+  // Don't toggle if clicking inside body
+  card.classList.toggle('open');
+}
+
+// Prevent body clicks from toggling
+document.querySelectorAll('.endpoint-body').forEach(b => {
+  b.addEventListener('click', e => e.stopPropagation());
+});
+
+function simular() {
+  const num1 = parseFloat(document.getElementById('num1').value);
+  const num2 = parseFloat(document.getElementById('num2').value);
+  const operacao = document.getElementById('operacao').value;
+
+  const t0 = Date.now();
+  const box = document.getElementById('responseBox');
+  box.style.display = 'block';
+
+  // Simulate locally
+  let resultado, erro, status;
+  const symbols = { soma:'+', subtracao:'−', multiplicacao:'×', divisao:'÷' };
+
+  if (isNaN(num1) || isNaN(num2)) {
+    erro = "'num1' e 'num2' devem ser números"; status = 400;
+  } else if (operacao === 'divisao' && num2 === 0) {
+    erro = "Divisão por zero não é permitida"; status = 422;
+  } else {
+    status = 200;
+    if (operacao === 'soma') resultado = num1 + num2;
+    else if (operacao === 'subtracao') resultado = num1 - num2;
+    else if (operacao === 'multiplicacao') resultado = num1 * num2;
+    else resultado = num1 / num2;
+  }
+
+  const elapsed = Date.now() - t0 + Math.floor(Math.random() * 12 + 3);
+  const statusEl = document.getElementById('responseStatus');
+  const timeEl = document.getElementById('responseTime');
+  const display = document.getElementById('resultDisplay');
+  const jsonEl = document.getElementById('responseJson');
+
+  timeEl.textContent = elapsed + ' ms';
+
+  if (status === 200) {
+    statusEl.textContent = '200 OK';
+    statusEl.className = 'response-status ok';
+    const sym = symbols[operacao];
+    const expr = `${num1} ${sym} ${num2} = ${resultado}`;
+    display.textContent = expr;
+    const obj = {
+      sucesso: true,
+      operacao,
+      expressao: expr,
+      num1,
+      num2,
+      resultado,
+      timestamp: new Date().toISOString()
+    };
+    jsonEl.innerHTML = syntaxHL(JSON.stringify(obj, null, 2));
+  } else {
+    statusEl.textContent = status + ' Error';
+    statusEl.className = 'response-status err';
+    display.textContent = '⚠ ' + erro;
+    display.style.color = 'var(--red)';
+    jsonEl.innerHTML = syntaxHL(JSON.stringify({ erro, status }, null, 2));
+  }
+}
+
+function syntaxHL(json) {
+  return json
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) {
+        if (/:$/.test(m)) return `<span class="key">${m}</span>`;
+        return `<span class="str">${m}</span>`;
+      }
+      if (/true|false/.test(m)) return `<span class="bool">${m}</span>`;
+      return `<span class="num">${m}</span>`;
+    });
+}
+</script>
+</body>
+</html>
