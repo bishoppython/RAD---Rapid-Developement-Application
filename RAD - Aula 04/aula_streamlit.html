@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula de Streamlit — Dashboard de Funcionários</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface2: #eef1f6;
+    --accent: #0969da;
+    --accent2: #e05b00;
+    --accent3: #6e40c9;
+    --text: #1a1f2e;
+    --text-muted: #5a6380;
+    --border: #d0d7e3;
+    --code-bg: #f0f2f7;
+    --highlight: #e8edf5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* light theme — no grain needed */
+
+  /* ── PROGRESS BAR ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    width: 0%;
+    z-index: 999;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(9,105,218,0.4);
+  }
+
+  /* ── SIDEBAR NAV ── */
+  nav {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 40px 0;
+    z-index: 100;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+  }
+
+  .nav-brand {
+    padding: 0 28px 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .nav-brand .label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .nav-brand h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .nav-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  nav ul { list-style: none; padding: 0 12px; }
+  nav ul li { margin-bottom: 2px; }
+
+  nav ul li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  nav ul li a:hover,
+  nav ul li a.active {
+    color: var(--text);
+    background: var(--surface2);
+  }
+
+  nav ul li a.active { color: var(--accent); }
+
+  nav ul li a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    min-width: 20px;
+  }
+
+  .nav-section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 20px 28px 8px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    margin-left: 260px;
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 100px 80px 80px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffffff 60%, #eef4ff 100%);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -100px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(9,105,218,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -200px; left: 200px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(110,64,201,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(9,105,218,0.08);
+    border: 1px solid rgba(9,105,218,0.2);
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(42px, 5vw, 68px);
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 20px;
+    max-width: 700px;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin-bottom: 40px;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-item .key {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .meta-item .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .meta-item .value .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    padding: 72px 80px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(9,105,218,0.08);
+    border: 1px solid rgba(9,105,218,0.2);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+
+  .section-title-group {}
+
+  .section-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    margin-bottom: 6px;
+  }
+
+  .section-title-group h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  /* ── CONTENT ELEMENTS ── */
+  p {
+    color: var(--text-muted);
+    font-size: 16px;
+    margin-bottom: 16px;
+    max-width: 720px;
+  }
+
+  p strong { color: var(--text); font-weight: 500; }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 40px 0 16px;
+  }
+
+  h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 28px 0 10px;
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 24px 0;
+    overflow: hidden;
+    max-width: 760px;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .code-dots span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .code-dots span:nth-child(1) { background: #ff5f57; }
+  .code-dots span:nth-child(2) { background: #febc2e; }
+  .code-dots span:nth-child(3) { background: #28c840; }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .code-block pre {
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #2d3748;
+    scrollbar-width: thin;
+  }
+
+  /* Syntax colors — light theme */
+  .kw { color: #8250df; }
+  .fn { color: #0550ae; }
+  .str { color: #0a7d4e; }
+  .num { color: #b5540b; }
+  .cm { color: #8a929e; font-style: italic; }
+  .var { color: #c0392b; }
+  .attr { color: #735c0f; }
+  .op { color: #0969da; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    display: flex;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 24px 0;
+    max-width: 720px;
+  }
+
+  .callout-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .callout-body { flex: 1; }
+  .callout-body strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .callout-body p { margin: 0; font-size: 14px; }
+
+  .callout.info {
+    background: rgba(9,105,218,0.05);
+    border: 1px solid rgba(9,105,218,0.18);
+  }
+  .callout.info .callout-body strong { color: var(--accent); }
+
+  .callout.warning {
+    background: rgba(224,91,0,0.05);
+    border: 1px solid rgba(224,91,0,0.18);
+  }
+  .callout.warning .callout-body strong { color: var(--accent2); }
+
+  .callout.tip {
+    background: rgba(110,64,201,0.05);
+    border: 1px solid rgba(110,64,201,0.18);
+  }
+  .callout.tip .callout-body strong { color: var(--accent3); }
+
+  /* ── GRID CARDS ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    max-width: 760px;
+    margin: 24px 0;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(9,105,218,0.1);
+  }
+
+  .card-icon { font-size: 28px; margin-bottom: 10px; }
+
+  .card h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0 0 6px;
+  }
+
+  .card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ── TIMELINE ── */
+  .timeline {
+    max-width: 720px;
+    margin: 24px 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 32px;
+    position: relative;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 36px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-item:last-child::before { display: none; }
+
+  .timeline-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #e8f0fe;
+    border: 2px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .timeline-content { padding-top: 4px; }
+  .timeline-content h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .timeline-content p { font-size: 14px; margin: 0; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table {
+    width: 100%;
+    max-width: 720px;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .compare-table th {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .compare-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+
+  .compare-table tr:hover td { background: var(--surface2); }
+  .compare-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--accent);
+  }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge.new { background: rgba(9,105,218,0.1); color: var(--accent); }
+  .badge.important { background: rgba(224,91,0,0.1); color: var(--accent2); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+    max-width: 720px;
+  }
+
+  /* ── QUIZ BLOCK ── */
+  .quiz {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 720px;
+    margin: 32px 0;
+  }
+
+  .quiz h4 {
+    font-family: 'Syne', sans-serif;
+    color: var(--accent3);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+
+  .quiz p { color: var(--text); font-size: 16px; margin: 0 0 16px; }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-family: 'Lora', serif;
+  }
+
+  .quiz-option:hover { border-color: var(--accent3); color: var(--text); background: rgba(110,64,201,0.04); }
+  .quiz-option.correct { border-color: #1a7f37; background: rgba(26,127,55,0.07); color: #1a7f37; }
+  .quiz-option.wrong { border-color: var(--accent2); background: rgba(224,91,0,0.07); color: var(--accent2); }
+
+  .quiz-option .letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-left: 260px;
+    padding: 48px 80px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+
+  footer p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { width: 200px; }
+    main, footer { margin-left: 200px; }
+    .hero, section { padding: 60px 40px; }
+  }
+
+  @media (max-width: 640px) {
+    nav { display: none; }
+    main, footer { margin-left: 0; }
+    .hero, section { padding: 48px 24px; }
+  }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<!-- ── SIDEBAR ── -->
+<nav id="sidebar">
+  <div class="nav-brand">
+    <span class="label">Python · Data Apps</span>
+    <h2>Streamlit</h2>
+    <div class="nav-time">⏱ 1h 30min</div>
+  </div>
+
+  <ul>
+    <div class="nav-section-label">Aula</div>
+    <li><a href="#intro" class="active"><span class="num">01</span> Introdução</a></li>
+    <li><a href="#config"><span class="num">02</span> Configuração</a></li>
+    <li><a href="#dados"><span class="num">03</span> Dados</a></li>
+    <li><a href="#sidebar-sec"><span class="num">04</span> Sidebar & Filtros</a></li>
+    <li><a href="#kpis"><span class="num">05</span> KPIs & Métricas</a></li>
+    <li><a href="#tabela"><span class="num">06</span> Tabela</a></li>
+    <li><a href="#graficos"><span class="num">07</span> Gráficos</a></li>
+    <li><a href="#pivot"><span class="num">08</span> Pivot Table</a></li>
+    <li><a href="#download"><span class="num">09</span> Download & Upload</a></li>
+    <li><a href="#pratica"><span class="num">10</span> Prática Final</a></li>
+  </ul>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Aula Completa • Python</div>
+    <h1>Construindo um Dashboard com <span>Streamlit</span></h1>
+    <p>Do zero ao app completo: aprenda a criar interfaces web interativas para análise de dados usando Python puro — sem HTML, sem JavaScript.</p>
+    <div class="hero-meta">
+      <div class="meta-item">
+        <span class="key">Duração</span>
+        <span class="value">1h 30min</span>
+      </div>
+      <div class="meta-item">
+        <span class="key">Nível</span>
+        <span class="value">Iniciante</span>
+      </div>
+      <div class="meta-item">
+        <span class="key">Pré-requisito</span>
+        <span class="value">Python básico</span>
+      </div>
+      <div class="meta-item">
+        <span class="key">Status</span>
+        <span class="value"><span class="dot"></span>Ao vivo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 01 — INTRODUÇÃO (0–10 min)
+  ════════════════════════════════════ -->
+  <section id="intro">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 00:00 — 10:00</div>
+        <h2>O que é Streamlit e por que usá-lo?</h2>
+      </div>
+    </div>
+
+    <p>
+      Imagine poder construir um <strong>dashboard interativo</strong> — com gráficos, filtros, tabelas e downloads — usando apenas Python. Sem configurar servidores, sem escrever HTML, sem aprender JavaScript. Isso é exatamente o que o <strong>Streamlit</strong> oferece.
+    </p>
+
+    <p>
+      O Streamlit é uma biblioteca open-source criada em 2019 que transforma scripts Python em aplicações web em minutos. Ele foi projetado especificamente para cientistas de dados e analistas que precisam <strong>compartilhar resultados de forma visual</strong> sem depender de um time de desenvolvimento web.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h4>Rapidez</h4>
+        <p>Do script ao app em minutos. Salva o arquivo, o browser atualiza.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🐍</div>
+        <h4>Só Python</h4>
+        <p>Sem HTML, CSS, JS. Você já sabe tudo que precisa para começar.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔁</div>
+        <h4>Reatividade</h4>
+        <p>Qualquer interação do usuário re-executa o script automaticamente.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <h4>Ecossistema</h4>
+        <p>Integra nativamente com pandas, plotly, scikit-learn, e mais.</p>
+      </div>
+    </div>
+
+    <h3>Como o Streamlit funciona?</h3>
+    <p>
+      O mecanismo central é simples: sempre que o usuário interage com algum widget (clica num botão, move um slider), o Streamlit <strong>re-executa o script Python do topo ao fundo</strong>. O estado atual dos widgets é preservado entre as re-execuções. Isso cria a sensação de interatividade.
+    </p>
+
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <strong>Analogia para fixar</strong>
+        <p>Pense no Streamlit como um "Excel interativo" em Python: cada vez que você muda um valor em uma célula (widget), a planilha recalcula (re-executa o script). Mas em vez de fórmulas, você usa Python.</p>
+      </div>
+    </div>
+
+    <h3>Instalando</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">TERMINAL</span>
+      </div>
+      <pre><span class="cm"># Instalar o Streamlit</span>
+pip install streamlit pandas numpy
+
+<span class="cm"># Criar um arquivo e rodar</span>
+echo "import streamlit as st; st.write('Olá, mundo!')" > app.py
+streamlit run app.py</pre>
+    </div>
+
+    <p>O Streamlit abrirá automaticamente no seu browser em <code>http://localhost:8501</code>.</p>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Atenção</strong>
+        <p>Use sempre <code>streamlit run app.py</code> para rodar, nunca <code>python app.py</code>. O segundo não vai renderizar a interface web.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 02 — CONFIGURAÇÃO (10–20 min)
+  ════════════════════════════════════ -->
+  <section id="config">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 10:00 — 20:00</div>
+        <h2>Configuração da Página e Título</h2>
+      </div>
+    </div>
+
+    <p>
+      Todo app Streamlit começa com uma chamada de configuração. Vamos olhar as primeiras linhas do nosso arquivo <code>app.py</code>:
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="kw">import</span> streamlit <span class="kw">as</span> <span class="var">st</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="var">np</span>
+
+<span class="cm"># CONFIGURAÇÃO — deve ser a PRIMEIRA chamada st.</span>
+<span class="var">st</span>.<span class="fn">set_page_config</span>(
+    <span class="attr">page_title</span>=<span class="str">"Dashboard de Funcionários"</span>,
+    <span class="attr">layout</span>=<span class="str">"wide"</span>
+)
+
+<span class="var">st</span>.<span class="fn">title</span>(<span class="str">"📊 Dashboard de Análise de Funcionários"</span>)</pre>
+    </div>
+
+    <h3>Entendendo cada linha</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Parâmetro</th>
+          <th>O que faz</th>
+          <th>Opções</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>page_title</td>
+          <td>Define o título da aba do browser</td>
+          <td>Qualquer string</td>
+        </tr>
+        <tr>
+          <td>layout</td>
+          <td>Controla a largura do conteúdo</td>
+          <td><code>"centered"</code> (padrão) ou <code>"wide"</code></td>
+        </tr>
+        <tr>
+          <td>page_icon</td>
+          <td>Ícone da aba do browser</td>
+          <td>Emoji ou caminho de imagem</td>
+        </tr>
+        <tr>
+          <td>initial_sidebar_state</td>
+          <td>Estado inicial da sidebar</td>
+          <td><code>"auto"</code>, <code>"expanded"</code>, <code>"collapsed"</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Elementos de texto básicos</h3>
+    <p>O Streamlit oferece várias funções para exibir texto, do simples ao formatado:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON</span>
+      </div>
+      <pre><span class="var">st</span>.<span class="fn">title</span>(<span class="str">"Título grande"</span>)          <span class="cm"># H1</span>
+<span class="var">st</span>.<span class="fn">header</span>(<span class="str">"Cabeçalho"</span>)             <span class="cm"># H2</span>
+<span class="var">st</span>.<span class="fn">subheader</span>(<span class="str">"Sub-título"</span>)         <span class="cm"># H3</span>
+<span class="var">st</span>.<span class="fn">write</span>(<span class="str">"Texto comum"</span>)            <span class="cm"># write() é o canivete suíço do st.</span>
+<span class="var">st</span>.<span class="fn">markdown</span>(<span class="str">"**Negrito** e *itálico*"</span>)  <span class="cm"># Suporta Markdown</span>
+<span class="var">st</span>.<span class="fn">caption</span>(<span class="str">"Texto pequeno / nota"</span>)   <span class="cm"># Texto de legenda</span>
+<span class="var">st</span>.<span class="fn">code</span>(<span class="str">"print('olá')"</span>, language=<span class="str">"python"</span>) <span class="cm"># Bloco de código</span></pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">🎯</div>
+      <div class="callout-body">
+        <strong>Dica do instrutor</strong>
+        <p>O <code>st.write()</code> é "mágico": ele detecta o tipo do dado e renderiza automaticamente. Passe um DataFrame e ele vira tabela. Passe um dict e vira JSON. Passe um gráfico Plotly e ele renderiza. É sempre um bom ponto de partida.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 03 — DADOS (20–35 min)
+  ════════════════════════════════════ -->
+  <section id="dados">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 20:00 — 35:00</div>
+        <h2>Carregando e Preparando Dados</h2>
+      </div>
+    </div>
+
+    <p>
+      A parte mais importante de qualquer dashboard é a <strong>origem e qualidade dos dados</strong>. No nosso app, os dados são gerados programaticamente — mas a mesma estrutura serve para carregar um CSV, consultar um banco de dados ou chamar uma API.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">@st</span>.<span class="fn">cache_data</span>                   <span class="cm"># ← DECORATOR MÁGICO — veremos abaixo</span>
+<span class="kw">def</span> <span class="fn">carregar_dados</span>():
+    dados = {
+        <span class="str">"nome"</span>:    [<span class="str">"Ana"</span>, <span class="str">"Bruno"</span>, <span class="str">"Carlos"</span>, <span class="str">"Daniela"</span>, <span class="str">"Eduardo"</span>],
+        <span class="str">"idade"</span>:   [<span class="num">23</span>, <span class="num">35</span>, <span class="num">29</span>, <span class="var">np</span>.nan, <span class="num">40</span>],
+        <span class="str">"cidade"</span>:  [<span class="str">"SP"</span>, <span class="str">"RJ"</span>, <span class="str">"SP"</span>, <span class="str">"MG"</span>, <span class="str">"RJ"</span>],
+        <span class="str">"salario"</span>: [<span class="num">3000</span>, <span class="num">5000</span>, <span class="num">4000</span>, <span class="num">3500</span>, <span class="var">np</span>.nan],
+        <span class="str">"data_contratacao"</span>: <span class="var">pd</span>.<span class="fn">to_datetime</span>([...])
+    }
+
+    <span class="var">df</span> = <span class="var">pd</span>.<span class="fn">DataFrame</span>(dados)
+
+    <span class="cm"># ── LIMPEZA DE DADOS ──────────────────────────────</span>
+    <span class="var">df</span>[<span class="str">"idade"</span>]   = <span class="var">df</span>[<span class="str">"idade"</span>].<span class="fn">fillna</span>(<span class="var">df</span>[<span class="str">"idade"</span>].<span class="fn">mean</span>())
+    <span class="var">df</span>[<span class="str">"salario"</span>] = <span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">fillna</span>(<span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">median</span>())
+
+    <span class="cm"># ── FEATURE ENGINEERING ───────────────────────────</span>
+    <span class="var">df</span>[<span class="str">"salario_anual"</span>]   = <span class="var">df</span>[<span class="str">"salario"</span>] * <span class="num">12</span>
+    <span class="var">df</span>[<span class="str">"ano_contratacao"</span>]  = <span class="var">df</span>[<span class="str">"data_contratacao"</span>].dt.year
+    <span class="var">df</span>[<span class="str">"categoria_salario"</span>] = <span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">apply</span>(
+        <span class="kw">lambda</span> <span class="var">x</span>: <span class="str">"Alto"</span> <span class="kw">if</span> <span class="var">x</span> > <span class="num">4500</span> <span class="kw">else</span> <span class="str">"Médio"</span> <span class="kw">if</span> <span class="var">x</span> > <span class="num">3000</span> <span class="kw">else</span> <span class="str">"Baixo"</span>
+    )
+
+    <span class="kw">return</span> <span class="var">df</span>
+
+<span class="var">df</span> = <span class="fn">carregar_dados</span>()</pre>
+    </div>
+
+    <h3>O <code>@st.cache_data</code> — o segredo da performance</h3>
+    <p>
+      Lembra que o Streamlit re-executa o script inteiro a cada interação? Imagine carregar um CSV de 1 GB toda vez que o usuário move um slider. Seria lentíssimo.
+    </p>
+    <p>
+      O decorador <code>@st.cache_data</code> resolve isso: na <strong>primeira chamada</strong>, a função executa normalmente e armazena o resultado em cache. Nas chamadas seguintes, o Streamlit verifica se os argumentos mudaram — se não mudaram, retorna o resultado cacheado instantaneamente.
+    </p>
+
+    <div class="callout info">
+      <div class="callout-icon">🗄️</div>
+      <div class="callout-body">
+        <strong>cache_data vs cache_resource</strong>
+        <p>Use <code>@st.cache_data</code> para dados serializáveis (DataFrames, listas, dicts). Use <code>@st.cache_resource</code> para recursos não-serializáveis (conexões de banco de dados, modelos de ML carregados em memória).</p>
+      </div>
+    </div>
+
+    <h3>Limpeza de dados — por que importa no dashboard</h3>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot">1</div>
+        <div class="timeline-content">
+          <h4>Identificar NaN</h4>
+          <p>A Daniela não tem idade e o Eduardo não tem salário cadastrado. Valores ausentes causam erros nos cálculos de métricas e nos gráficos.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">2</div>
+        <div class="timeline-content">
+          <h4>Preencher valores ausentes</h4>
+          <p>Usamos a <strong>média</strong> para a idade (valores contínuos) e a <strong>mediana</strong> para salário (mais robusta a outliers). Outras estratégias: preencher com 0, com o valor da linha anterior, ou remover a linha.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">3</div>
+        <div class="timeline-content">
+          <h4>Feature Engineering</h4>
+          <p>Criamos novas colunas úteis para análise: <code>salario_anual</code>, <code>ano_contratacao</code> e <code>categoria_salario</code>. Essas transformações são feitas uma vez aqui, e ficam disponíveis em todo o app.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>📝 Verificação rápida</h4>
+      <p>Por que é uma boa prática colocar o carregamento de dados dentro de uma função com <code>@st.cache_data</code> em vez de no corpo principal do script?</p>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">A</span> Porque o Python exige isso para usar pandas</div>
+        <div class="quiz-option" onclick="answer(this, true)"><span class="letter">B</span> Para evitar recarregar os dados a cada interação do usuário</div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">C</span> Porque funções rodam mais rápido que código no corpo do script</div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">D</span> Para poder usar o decorator @st.cache_resource</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 04 — SIDEBAR (35–48 min)
+  ════════════════════════════════════ -->
+  <section id="sidebar-sec">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 35:00 — 48:00</div>
+        <h2>Sidebar e Filtros Interativos</h2>
+      </div>
+    </div>
+
+    <p>
+      A sidebar é o painel lateral que aparece à esquerda do app. É o lugar ideal para colocar <strong>controles e filtros</strong>, mantendo o espaço principal para os dados e visualizações.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">st</span>.sidebar.<span class="fn">header</span>(<span class="str">"🔎 Filtros"</span>)
+
+<span class="cm"># Widget 1: Seleção múltipla de cidades</span>
+<span class="var">cidades</span> = <span class="var">st</span>.sidebar.<span class="fn">multiselect</span>(
+    <span class="str">"Selecione a cidade"</span>,
+    options=<span class="var">df</span>[<span class="str">"cidade"</span>].<span class="fn">unique</span>(),     <span class="cm"># todas as opções disponíveis</span>
+    default=<span class="var">df</span>[<span class="str">"cidade"</span>].<span class="fn">unique</span>()      <span class="cm"># pré-selecionado: todas</span>
+)
+
+<span class="cm"># Widget 2: Slider de faixa de valores</span>
+<span class="var">faixa_salario</span> = <span class="var">st</span>.sidebar.<span class="fn">slider</span>(
+    <span class="str">"Faixa salarial"</span>,
+    <span class="fn">float</span>(<span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">min</span>()),       <span class="cm"># valor mínimo</span>
+    <span class="fn">float</span>(<span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">max</span>()),       <span class="cm"># valor máximo</span>
+    (<span class="fn">float</span>(<span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">min</span>()), <span class="fn">float</span>(<span class="var">df</span>[<span class="str">"salario"</span>].<span class="fn">max</span>()))  <span class="cm"># valor inicial (tuple = range)</span>
+)
+
+<span class="cm"># ── APLICAR OS FILTROS ────────────────────────────</span>
+<span class="var">df_filtrado</span> = <span class="var">df</span>[
+    (<span class="var">df</span>[<span class="str">"cidade"</span>].<span class="fn">isin</span>(<span class="var">cidades</span>)) &
+    (<span class="var">df</span>[<span class="str">"salario"</span>] >= <span class="var">faixa_salario</span>[<span class="num">0</span>]) &
+    (<span class="var">df</span>[<span class="str">"salario"</span>] <= <span class="var">faixa_salario</span>[<span class="num">1</span>])
+]</pre>
+    </div>
+
+    <h3>Catálogo de Widgets do Streamlit</h3>
+    <p>O Streamlit tem mais de 20 widgets prontos. Os mais usados em dashboards:</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Widget</th>
+          <th>Uso ideal</th>
+          <th>Retorna</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>st.slider()</td><td>Faixas numéricas, datas</td><td>número ou tuple</td></tr>
+        <tr><td>st.multiselect()</td><td>Seleção de múltiplos itens</td><td>lista</td></tr>
+        <tr><td>st.selectbox()</td><td>Uma opção de uma lista</td><td>valor único</td></tr>
+        <tr><td>st.radio()</td><td>Escolha exclusiva visível</td><td>valor único</td></tr>
+        <tr><td>st.checkbox()</td><td>Liga/desliga funcionalidades</td><td>bool</td></tr>
+        <tr><td>st.text_input()</td><td>Busca por texto</td><td>string</td></tr>
+        <tr><td>st.date_input()</td><td>Filtros de período</td><td>date</td></tr>
+        <tr><td>st.number_input()</td><td>Valores numéricos precisos</td><td>número</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <div class="callout-icon">🔑</div>
+      <div class="callout-body">
+        <strong>O padrão central do Streamlit</strong>
+        <p>Todo widget <strong>retorna um valor</strong> que você armazena em uma variável. Você usa essa variável para filtrar, calcular ou exibir dados. Quando o usuário muda o widget, a variável muda, o script re-executa, e o dashboard atualiza. É simples assim.</p>
+      </div>
+    </div>
+
+    <h3>Prefixo <code>st.sidebar.</code></h3>
+    <p>
+      Qualquer elemento do Streamlit pode ser colocado na sidebar adicionando <code>st.sidebar.</code> antes. Funciona com textos, widgets, gráficos — qualquer coisa. Sem o prefixo, o elemento aparece na área principal.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — COMPARAÇÃO</span>
+      </div>
+      <pre><span class="cm"># Na área principal</span>
+<span class="var">opcao</span> = <span class="var">st</span>.<span class="fn">selectbox</span>(<span class="str">"Cidade"</span>, [<span class="str">"SP"</span>, <span class="str">"RJ"</span>])
+
+<span class="cm"># Na sidebar</span>
+<span class="var">opcao</span> = <span class="var">st</span>.sidebar.<span class="fn">selectbox</span>(<span class="str">"Cidade"</span>, [<span class="str">"SP"</span>, <span class="str">"RJ"</span>])</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 05 — KPIs (48–58 min)
+  ════════════════════════════════════ -->
+  <section id="kpis">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 48:00 — 58:00</div>
+        <h2>Colunas e KPIs com <code>st.metric()</code></h2>
+      </div>
+    </div>
+
+    <p>
+      Dashboards profissionais sempre começam com os <strong>números mais importantes</strong> em destaque — os KPIs (Key Performance Indicators). O Streamlit tem o <code>st.metric()</code> e o sistema de colunas para criar esse layout de forma limpa.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="cm"># Criar 3 colunas de largura igual</span>
+<span class="var">col1</span>, <span class="var">col2</span>, <span class="var">col3</span> = <span class="var">st</span>.<span class="fn">columns</span>(<span class="num">3</span>)
+
+<span class="cm"># Colocar um metric em cada coluna</span>
+<span class="var">col1</span>.<span class="fn">metric</span>(<span class="str">"💰 Salário Médio"</span>, <span class="var">f</span><span class="str">"R$ {df_filtrado['salario'].mean():.2f}"</span>)
+<span class="var">col2</span>.<span class="fn">metric</span>(<span class="str">"👥 Total Funcionários"</span>, <span class="var">df_filtrado</span>.<span class="fn">shape</span>[<span class="num">0</span>])
+<span class="var">col3</span>.<span class="fn">metric</span>(<span class="str">"📈 Salário Máximo"</span>, <span class="var">f</span><span class="str">"R$ {df_filtrado['salario'].max():.2f}"</span>)</pre>
+    </div>
+
+    <h3>Sistema de Colunas</h3>
+    <p>
+      <code>st.columns()</code> divide o espaço horizontal disponível em colunas. Você pode passar um número inteiro para colunas iguais, ou uma lista de pesos para colunas proporcionais:
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — EXEMPLOS DE COLUNAS</span>
+      </div>
+      <pre><span class="cm"># 3 colunas iguais</span>
+<span class="var">c1</span>, <span class="var">c2</span>, <span class="var">c3</span> = <span class="var">st</span>.<span class="fn">columns</span>(<span class="num">3</span>)
+
+<span class="cm"># 2 colunas: esquerda 2x maior que direita</span>
+<span class="var">c_principal</span>, <span class="var">c_lateral</span> = <span class="var">st</span>.<span class="fn">columns</span>([<span class="num">2</span>, <span class="num">1</span>])
+
+<span class="cm"># 4 colunas com proporções customizadas</span>
+<span class="var">a</span>, <span class="var">b</span>, <span class="var">c</span>, <span class="var">d</span> = <span class="var">st</span>.<span class="fn">columns</span>([<span class="num">3</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>])
+
+<span class="cm"># Usar uma coluna como contexto</span>
+<span class="kw">with</span> <span class="var">c1</span>:
+    <span class="var">st</span>.<span class="fn">write</span>(<span class="str">"Conteúdo da coluna 1"</span>)
+    <span class="var">st</span>.<span class="fn">bar_chart</span>(<span class="var">dados</span>)</pre>
+    </div>
+
+    <h3>O poder do <code>st.metric()</code></h3>
+    <p>
+      O <code>st.metric()</code> exibe um valor com <strong>indicador de variação</strong> (delta), muito útil para mostrar crescimento ou queda em relação a um período anterior:
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — metric com delta</span>
+      </div>
+      <pre><span class="var">st</span>.<span class="fn">metric</span>(
+    <span class="attr">label</span>=<span class="str">"Receita Mensal"</span>,
+    <span class="attr">value</span>=<span class="str">"R$ 42.500"</span>,
+    <span class="attr">delta</span>=<span class="str">"+ R$ 3.200"</span>,        <span class="cm"># aparece em verde com seta ↑</span>
+    <span class="attr">delta_color</span>=<span class="str">"normal"</span>    <span class="cm"># "normal", "inverse", "off"</span>
+)</pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">🎯</div>
+      <div class="callout-body">
+        <strong>Dica de design</strong>
+        <p>Repare que os KPIs do nosso app usam <code>df_filtrado</code>, não <code>df</code> original. Isso significa que os números <strong>se atualizam automaticamente</strong> quando o usuário muda os filtros na sidebar. Esse é o padrão reativo fundamental do Streamlit.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 06 — TABELA (58–66 min)
+  ════════════════════════════════════ -->
+  <section id="tabela">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 58:00 — 66:00</div>
+        <h2>Exibindo Tabelas de Dados</h2>
+      </div>
+    </div>
+
+    <p>
+      O Streamlit oferece três formas de exibir dados tabulares, cada uma com seu propósito:
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">st</span>.<span class="fn">subheader</span>(<span class="str">"📋 Dados"</span>)
+
+<span class="cm"># dataframe() — interativo (recomendado)</span>
+<span class="var">st</span>.<span class="fn">dataframe</span>(
+    <span class="var">df_filtrado</span>,
+    <span class="attr">use_container_width</span>=<span class="kw">True</span>   <span class="cm"># ocupa toda a largura disponível</span>
+)</pre>
+    </div>
+
+    <h3>Comparativo: as 3 formas de exibir tabelas</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Função</th>
+          <th>Interativo?</th>
+          <th>Editável?</th>
+          <th>Quando usar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>st.dataframe()</td>
+          <td>✅ Sim</td>
+          <td>❌ Não</td>
+          <td>Exploração de dados — sorting, scroll, search</td>
+        </tr>
+        <tr>
+          <td>st.table()</td>
+          <td>❌ Não</td>
+          <td>❌ Não</td>
+          <td>Tabelas estáticas pequenas, relatórios</td>
+        </tr>
+        <tr>
+          <td>st.data_editor()</td>
+          <td>✅ Sim</td>
+          <td>✅ Sim</td>
+          <td>Quando o usuário precisa editar dados</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <strong>use_container_width=True</strong>
+        <p>Esse parâmetro faz o componente se expandir para ocupar toda a largura do container onde está. É uma boa prática para dashboards no layout <code>"wide"</code>, especialmente quando combinado com colunas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 07 — GRÁFICOS (66–78 min)
+  ════════════════════════════════════ -->
+  <section id="graficos">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 66:00 — 78:00</div>
+        <h2>Visualizações e Gráficos</h2>
+      </div>
+    </div>
+
+    <p>
+      Streamlit tem gráficos nativos rápidos e também suporte completo às bibliotecas mais poderosas do ecossistema Python.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">st</span>.<span class="fn">subheader</span>(<span class="str">"📊 Análises"</span>)
+
+<span class="var">col1</span>, <span class="var">col2</span> = <span class="var">st</span>.<span class="fn">columns</span>(<span class="num">2</span>)
+
+<span class="cm"># Gráfico 1: Média salarial por cidade</span>
+<span class="var">media_cidade</span> = <span class="var">df_filtrado</span>.<span class="fn">groupby</span>(<span class="str">"cidade"</span>)[<span class="str">"salario"</span>].<span class="fn">mean</span>()
+<span class="var">col1</span>.<span class="fn">bar_chart</span>(<span class="var">media_cidade</span>)
+
+<span class="cm"># Gráfico 2: Distribuição por categoria</span>
+<span class="var">categoria</span> = <span class="var">df_filtrado</span>[<span class="str">"categoria_salario"</span>].<span class="fn">value_counts</span>()
+<span class="var">col2</span>.<span class="fn">bar_chart</span>(<span class="var">categoria</span>)</pre>
+    </div>
+
+    <h3>Gráficos nativos do Streamlit</h3>
+    <p>Os gráficos nativos aceitam diretamente um DataFrame ou Series pandas, o que os torna rápidos de usar:</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Função</th><th>Tipo de gráfico</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>st.bar_chart()</td><td>Barras verticais</td></tr>
+        <tr><td>st.line_chart()</td><td>Linhas (séries temporais)</td></tr>
+        <tr><td>st.area_chart()</td><td>Área preenchida</td></tr>
+        <tr><td>st.scatter_chart()</td><td>Dispersão (x, y)</td></tr>
+        <tr><td>st.map()</td><td>Mapa com lat/lon</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Quando usar Plotly, Altair ou Matplotlib?</h3>
+    <p>
+      Os gráficos nativos são convenientes mas limitados em customização. Para dashboards mais elaborados, use bibliotecas externas:
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — Plotly Express</span>
+      </div>
+      <pre><span class="kw">import</span> plotly.express <span class="kw">as</span> <span class="var">px</span>
+
+<span class="var">fig</span> = <span class="var">px</span>.<span class="fn">bar</span>(
+    <span class="var">df_filtrado</span>,
+    <span class="attr">x</span>=<span class="str">"cidade"</span>,
+    <span class="attr">y</span>=<span class="str">"salario"</span>,
+    <span class="attr">color</span>=<span class="str">"categoria_salario"</span>,
+    <span class="attr">title</span>=<span class="str">"Salário por Cidade e Categoria"</span>,
+    <span class="attr">barmode</span>=<span class="str">"group"</span>
+)
+
+<span class="var">st</span>.<span class="fn">plotly_chart</span>(<span class="var">fig</span>, <span class="attr">use_container_width</span>=<span class="kw">True</span>)</pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-icon">🏆</div>
+      <div class="callout-body">
+        <strong>Recomendação para dashboards em produção</strong>
+        <p>Use <code>plotly.express</code> como biblioteca principal. Os gráficos são interativos (zoom, hover, download), bonitos por padrão e se integram perfeitamente com Streamlit via <code>st.plotly_chart()</code>. Os gráficos nativos do Streamlit são ótimos para protótipos rápidos.</p>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>📝 Verificação rápida</h4>
+      <p>Qual é a diferença entre <code>st.bar_chart(media_cidade)</code> e <code>st.plotly_chart(fig)</code>?</p>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">A</span> Nenhuma, os dois são equivalentes</div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">B</span> bar_chart é mais rápido de renderizar no browser</div>
+        <div class="quiz-option" onclick="answer(this, true)"><span class="letter">C</span> bar_chart é mais simples de usar; plotly_chart oferece mais controle e interatividade</div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">D</span> plotly_chart não funciona na sidebar</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 08 — PIVOT TABLE (78–85 min)
+  ════════════════════════════════════ -->
+  <section id="pivot">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 78:00 — 85:00</div>
+        <h2>Tabela Dinâmica (Pivot Table)</h2>
+      </div>
+    </div>
+
+    <p>
+      Uma tabela dinâmica (pivot table) permite <strong>cruzar duas dimensões</strong> e agregar uma métrica. É o coração de qualquer análise dimensional.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">pivot</span> = <span class="var">pd</span>.<span class="fn">pivot_table</span>(
+    <span class="var">df_filtrado</span>,
+    <span class="attr">values</span>=<span class="str">"salario"</span>,           <span class="cm"># ← métrica a calcular</span>
+    <span class="attr">index</span>=<span class="str">"cidade"</span>,             <span class="cm"># ← linhas</span>
+    <span class="attr">columns</span>=<span class="str">"categoria_salario"</span>, <span class="cm"># ← colunas</span>
+    <span class="attr">aggfunc</span>=<span class="str">"mean"</span>             <span class="cm"># ← função: "mean", "sum", "count", "max"</span>
+)
+
+<span class="var">st</span>.<span class="fn">dataframe</span>(<span class="var">pivot</span>)</pre>
+    </div>
+
+    <p>
+      O resultado é um DataFrame onde as <strong>linhas são as cidades</strong>, as <strong>colunas são as categorias salariais</strong> (Alto, Médio, Baixo) e os <strong>valores são a média de salário</strong> de cada combinação.
+    </p>
+
+    <div class="callout info">
+      <div class="callout-icon">📌</div>
+      <div class="callout-body">
+        <strong>Pivot Table = Cruzamento de dados</strong>
+        <p>Pergunta que a pivot table responde: <em>"Qual é o salário médio por cidade E por categoria?"</em>. Sem a pivot, você teria que fazer dois groupby separados. Com ela, você vê tudo de uma vez.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 09 — DOWNLOAD/UPLOAD (85–95 min)
+  ════════════════════════════════════ -->
+  <section id="download">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 85:00 — 95:00</div>
+        <h2>Download de Dados e Upload de Arquivos</h2>
+      </div>
+    </div>
+
+    <p>
+      Um dashboard útil permite ao usuário <strong>exportar os dados filtrados</strong> e também <strong>trazer seus próprios dados</strong> para análise. Vamos ver como implementar os dois.
+    </p>
+
+    <h3>Download — exportar CSV filtrado</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="cm"># 1. Converter o DataFrame em bytes CSV</span>
+<span class="var">csv</span> = <span class="var">df_filtrado</span>.<span class="fn">to_csv</span>(<span class="attr">index</span>=<span class="kw">False</span>).<span class="fn">encode</span>(<span class="str">"utf-8"</span>)
+
+<span class="cm"># 2. Exibir o botão de download</span>
+<span class="var">st</span>.<span class="fn">download_button</span>(
+    <span class="attr">label</span>=<span class="str">"Baixar CSV"</span>,
+    <span class="attr">data</span>=<span class="var">csv</span>,
+    <span class="attr">file_name</span>=<span class="str">"dados_filtrados.csv"</span>,
+    <span class="attr">mime</span>=<span class="str">"text/csv"</span>
+)</pre>
+    </div>
+
+    <p>
+      O <code>st.download_button()</code> gera um link de download no browser. O dado precisa estar em bytes — por isso o <code>.encode("utf-8")</code> no final. O parâmetro <code>mime</code> informa ao browser o tipo de arquivo.
+    </p>
+
+    <h3>Upload — carregar CSV do usuário</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — app.py</span>
+      </div>
+      <pre><span class="var">st</span>.sidebar.<span class="fn">subheader</span>(<span class="str">"📂 Upload de CSV"</span>)
+
+<span class="var">uploaded_file</span> = <span class="var">st</span>.sidebar.<span class="fn">file_uploader</span>(
+    <span class="str">"Envie um CSV"</span>,
+    <span class="attr">type</span>=[<span class="str">"csv"</span>]    <span class="cm"># lista de extensões permitidas</span>
+)
+
+<span class="cm"># O arquivo só existe se o usuário fez o upload</span>
+<span class="kw">if</span> <span class="var">uploaded_file</span>:
+    <span class="var">df_upload</span> = <span class="var">pd</span>.<span class="fn">read_csv</span>(<span class="var">uploaded_file</span>)
+    <span class="var">st</span>.<span class="fn">write</span>(<span class="str">"📄 Dados carregados:"</span>)
+    <span class="var">st</span>.<span class="fn">dataframe</span>(<span class="var">df_upload</span>)</pre>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Padrão if/else para upload</strong>
+        <p>Sempre use <code>if uploaded_file:</code> antes de processar o arquivo. Quando nenhum arquivo foi enviado, <code>uploaded_file</code> é <code>None</code>, e chamar <code>pd.read_csv(None)</code> causaria um erro.</p>
+      </div>
+    </div>
+
+    <h3>Outros formatos suportados</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <span class="code-lang">PYTHON — Formatos comuns</span>
+      </div>
+      <pre><span class="cm"># CSV</span>
+<span class="var">df</span> = <span class="var">pd</span>.<span class="fn">read_csv</span>(<span class="var">uploaded_file</span>)
+
+<span class="cm"># Excel</span>
+<span class="var">df</span> = <span class="var">pd</span>.<span class="fn">read_excel</span>(<span class="var">uploaded_file</span>)
+
+<span class="cm"># JSON</span>
+<span class="var">df</span> = <span class="var">pd</span>.<span class="fn">read_json</span>(<span class="var">uploaded_file</span>)
+
+<span class="cm"># Imagem (para ML)</span>
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+<span class="var">img</span> = <span class="var">Image</span>.<span class="fn">open</span>(<span class="var">uploaded_file</span>)
+<span class="var">st</span>.<span class="fn">image</span>(<span class="var">img</span>)</pre>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SEÇÃO 10 — PRÁTICA FINAL (95–90 min)
+  ════════════════════════════════════ -->
+  <section id="pratica">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <div class="section-title-group">
+        <div class="section-time">⏱ 95:00 — 90:00</div>
+        <h2>Consolidando o Conhecimento</h2>
+      </div>
+    </div>
+
+    <h3>Arquitetura completa do app</h3>
+    <p>Vamos revisitar o app como um todo e entender o fluxo de dados:</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot">1</div>
+        <div class="timeline-content">
+          <h4>set_page_config + title</h4>
+          <p>Configuração inicial. <code>set_page_config</code> deve ser sempre a primeira chamada <code>st.</code> do script.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">2</div>
+        <div class="timeline-content">
+          <h4>@st.cache_data → carregar_dados()</h4>
+          <p>Dados são carregados, limpos e enriquecidos uma única vez. O cache garante que isso não se repita a cada interação.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">3</div>
+        <div class="timeline-content">
+          <h4>st.sidebar — Widgets de filtro</h4>
+          <p>O usuário interage com <code>multiselect</code> e <code>slider</code>. Os valores retornados são armazenados em <code>cidades</code> e <code>faixa_salario</code>.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">4</div>
+        <div class="timeline-content">
+          <h4>df_filtrado = df[condições]</h4>
+          <p>O DataFrame original é filtrado com base nos valores dos widgets. Todo o restante do app usa <code>df_filtrado</code>.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">5</div>
+        <div class="timeline-content">
+          <h4>KPIs → Tabela → Gráficos → Pivot → Download</h4>
+          <p>Componentes visuais exibem os dados filtrados. Cada um reage automaticamente quando <code>df_filtrado</code> muda.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Desafio: expandindo o app</h3>
+    <p>Tente implementar estas melhorias no código base que estudamos hoje:</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🔵</div>
+        <h4>Fácil</h4>
+        <p>Adicione um filtro de <code>selectbox</code> para a coluna <code>categoria_salario</code> na sidebar.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🟡</div>
+        <h4>Médio</h4>
+        <p>Substitua <code>bar_chart</code> por um gráfico Plotly com cores por categoria e tooltip customizado.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔴</div>
+        <h4>Difícil</h4>
+        <p>Faça o upload de CSV substituir os dados de exemplo e aplique os mesmos filtros no arquivo enviado.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Onde ir a partir daqui?</h3>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Tópico</th><th>Para que serve</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>st.session_state</td><td>Persistir dados entre re-execuções (carrinho, formulário multi-step)</td></tr>
+        <tr><td>st.tabs()</td><td>Organizar o app em abas temáticas</td></tr>
+        <tr><td>st.expander()</td><td>Seções colapsáveis para conteúdo secundário</td></tr>
+        <tr><td>st.form()</td><td>Agrupar widgets e enviar todos de uma vez</td></tr>
+        <tr><td>Streamlit Cloud</td><td>Deploy gratuito do seu app em <code>share.streamlit.io</code></td></tr>
+        <tr><td>st.components.v1</td><td>Embutir HTML/JS customizado</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <div class="callout-icon">🚀</div>
+      <div class="callout-body">
+        <strong>Deploy gratuito em 3 passos</strong>
+        <p>1) Suba seu projeto no GitHub · 2) Acesse <code>share.streamlit.io</code> · 3) Conecte o repositório. Em minutos seu app terá uma URL pública compartilhável — sem custos.</p>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>📝 Quiz final</h4>
+      <p>Você quer que um gráfico só apareça quando o usuário marcar um checkbox. Qual é o padrão correto?</p>
+      <div class="quiz-options">
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">A</span> <code>st.chart_if(condition, data)</code></div>
+        <div class="quiz-option" onclick="answer(this, true)"><span class="letter">B</span> <code>show = st.checkbox("Mostrar gráfico")</code> seguido de <code>if show: st.bar_chart(...)</code></div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">C</span> <code>st.toggle(st.bar_chart(data))</code></div>
+        <div class="quiz-option" onclick="answer(this, false)"><span class="letter">D</span> Isso não é possível no Streamlit</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div>
+    <div class="footer-brand">Aula de Streamlit</div>
+    <p style="margin-top:4px">Dashboard de Análise de Funcionários · Python Data Apps</p>
+  </div>
+  <p>⏱ Duração total: <strong style="color:var(--text)">1h 30min</strong> · 10 seções</p>
+</footer>
+
+<script>
+  // ── PROGRESS BAR ──
+  const bar = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (scrolled / total * 100) + '%';
+  });
+
+  // ── ACTIVE NAV LINK ──
+  const sections = document.querySelectorAll('section, .hero');
+  const links = document.querySelectorAll('nav ul li a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`nav a[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ── QUIZ ANSWERS ──
+  function answer(el, correct) {
+    const parent = el.closest('.quiz-options');
+    parent.querySelectorAll('.quiz-option').forEach(o => {
+      o.classList.remove('correct', 'wrong');
+      o.style.pointerEvents = 'none';
+    });
+    el.classList.add(correct ? 'correct' : 'wrong');
+
+    if (!correct) {
+      parent.querySelectorAll('.quiz-option').forEach(o => {
+        if (o.getAttribute('onclick').includes('true')) {
+          setTimeout(() => o.classList.add('correct'), 600);
+        }
+      });
+    }
+  }
+
+  // ── SECTION ENTRANCE ANIMATION ──
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animationPlayState = 'running';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section').forEach(s => {
+    s.style.animationPlayState = 'paused';
+    sectionObserver.observe(s);
+  });
+</script>
+</body>
+</html>
