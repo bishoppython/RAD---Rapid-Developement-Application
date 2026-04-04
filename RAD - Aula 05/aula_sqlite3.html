@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQLite3 & Banco de Dados com Python</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F0;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE8;
+    --ink: #1A1A2E;
+    --ink-soft: #4A5568;
+    --accent: #0275A8;
+    --accent2: #1A7A35;
+    --accent3: #C94A2A;
+    --accent4: #6B3FA0;
+    --sqlite: #003B57;
+    --sqlite-light: #0097B2;
+    --border: #DDD9D2;
+    --code-bg: #1E2433;
+    --code-text: #E6EDF3;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 48px rgba(0,0,0,0.14);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--sqlite-light); border-radius: 99px; }
+
+  /* ── NAVBAR ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(247,245,240,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--sqlite-light);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo .db-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--sqlite-light), var(--accent));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .nav-links {
+    display: flex; gap: 6px; list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .nav-links a:hover {
+    color: var(--accent);
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    padding: 120px 80px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,151,178,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,151,178,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,151,178,0.08) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    z-index: 0;
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(2,117,168,0.06) 0%, transparent 70%);
+    bottom: 50px; left: 100px;
+    z-index: 0;
+    animation: glow-pulse 6s ease-in-out infinite reverse;
+  }
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 800px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,151,178,0.12);
+    border: 1px solid rgba(0,151,178,0.3);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--sqlite-light);
+    margin-bottom: 28px;
+    animation: fade-in-up 0.6s ease both;
+  }
+  .hero-badge::before { content: '●'; font-size: 0.5rem; animation: blink 1.5s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 24px;
+    animation: fade-in-up 0.6s 0.1s ease both;
+  }
+  .hero h1 .highlight {
+    background: linear-gradient(90deg, var(--sqlite-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    max-width: 580px;
+    margin-bottom: 44px;
+    animation: fade-in-up 0.6s 0.2s ease both;
+  }
+  .hero-pills {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    animation: fade-in-up 0.6s 0.3s ease both;
+  }
+  .pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    padding: 7px 16px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    background: var(--surface);
+    transition: all 0.2s;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+  .pill.active { border-color: var(--accent2); color: var(--accent2); background: rgba(63,185,80,0.08); }
+
+  .scroll-hint {
+    position: absolute; bottom: 40px; left: 80px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    display: flex; align-items: center; gap: 10px;
+    animation: fade-in-up 0.6s 0.5s ease both;
+  }
+  .scroll-line {
+    width: 40px; height: 1px;
+    background: linear-gradient(90deg, var(--sqlite-light), transparent);
+    animation: expand 2s ease-in-out infinite;
+  }
+  @keyframes expand { 0%,100%{width:40px} 50%{width:80px} }
+
+  @keyframes fade-in-up {
+    from { opacity:0; transform: translateY(24px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── MAIN CONTENT ── */
+  main { max-width: 900px; margin: 0 auto; padding: 0 40px 100px; }
+
+  /* ── SECTION TITLES ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--sqlite-light);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1; max-width: 60px;
+    height: 1px;
+    background: var(--sqlite-light);
+    opacity: 0.4;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h3 .step-num {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--sqlite-light), var(--accent));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    color: white;
+    flex-shrink: 0;
+  }
+  p { color: var(--ink-soft); margin-bottom: 16px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .card:hover { border-color: rgba(0,151,178,0.35); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--sqlite-light), var(--accent));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card-accent { border-left: 3px solid var(--accent2); }
+  .card-warn  { border-left: 3px solid var(--accent3); }
+  .card-info  { border-left: 3px solid var(--accent); }
+
+  /* ── CODE BLOCKS ── */
+  .code-wrap {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .code-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .code-dots span:nth-child(1) { background: #FF5F57; }
+  .code-dots span:nth-child(2) { background: #FEBC2E; }
+  .code-dots span:nth-child(3) { background: #28C840; }
+  .code-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+  .copy-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+  pre {
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--code-text);
+  }
+
+  /* Syntax highlighting */
+  .kw  { color: #FF79C6; }   /* keywords */
+  .fn  { color: #50FA7B; }   /* functions */
+  .str { color: #F1FA8C; }   /* strings */
+  .cm  { color: #6272A4; font-style: italic; } /* comments */
+  .num { color: #BD93F9; }   /* numbers */
+  .sql-kw  { color: #58A6FF; font-weight: 600; }   /* SQL keywords */
+  .sql-fn  { color: #3FB950; }   /* SQL functions */
+  .sql-str { color: #F78166; }   /* SQL strings */
+  .sql-cm  { color: #6E7681; font-style: italic; }
+  .sql-tb  { color: #D2A8FF; }   /* table names */
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: rgba(2,117,168,0.06);
+    border: 1px solid rgba(2,117,168,0.18);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    display: flex; gap: 14px;
+    align-items: flex-start;
+  }
+  .info-box .icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .info-box p { margin: 0; font-size: 0.92rem; color: var(--ink); }
+
+  .tip-box {
+    background: rgba(26,122,53,0.06);
+    border: 1px solid rgba(26,122,53,0.18);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    display: flex; gap: 14px;
+    align-items: flex-start;
+  }
+  .tip-box p { margin: 0; font-size: 0.92rem; color: var(--ink); }
+
+  .warn-box {
+    background: rgba(201,74,42,0.06);
+    border: 1px solid rgba(201,74,42,0.18);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 20px 0;
+    display: flex; gap: 14px;
+    align-items: flex-start;
+  }
+  .warn-box p { margin: 0; font-size: 0.92rem; color: var(--ink); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin: 20px 0;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface2); }
+  th {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sqlite-light);
+    padding: 12px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    padding: 11px 18px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,0,0,0.02); color: var(--ink); }
+  .td-kw { color: var(--accent); }
+  .td-type { color: var(--accent4); }
+  .td-desc { color: var(--ink-soft); }
+
+  /* ── SECTION DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 60px 0;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-track {
+    display: flex; gap: 8px; margin-bottom: 60px; flex-wrap: wrap;
+  }
+  .progress-step {
+    flex: 1; min-width: 80px;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 99px;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-step.done::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--sqlite-light), var(--accent));
+    border-radius: 99px;
+    animation: fill 0.5s ease forwards;
+  }
+  @keyframes fill { from{width:0} to{width:100%} }
+
+  /* ── SCHEMA VISUAL ── */
+  .schema-box {
+    background: #F0EDE8;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    margin: 20px 0;
+    position: relative;
+  }
+  .schema-table {
+    display: inline-block;
+    border: 1px solid var(--sqlite-light);
+    border-radius: 10px;
+    overflow: hidden;
+    min-width: 200px;
+    vertical-align: top;
+    margin: 10px;
+  }
+  .schema-header {
+    background: rgba(0,151,178,0.2);
+    padding: 8px 16px;
+    font-weight: 600;
+    color: var(--sqlite-light);
+    border-bottom: 1px solid var(--sqlite-light);
+  }
+  .schema-row {
+    padding: 5px 16px;
+    color: #4A5568;
+    border-bottom: 1px solid rgba(180,175,165,0.5);
+  }
+  .schema-row:last-child { border-bottom: none; }
+  .schema-row .pk { color: var(--accent3); font-size: 0.65rem; }
+  .schema-row .fk { color: var(--accent2); font-size: 0.65rem; }
+  .schema-row .type-tag { color: var(--accent4); opacity: 0.7; }
+  .schema-arrow {
+    display: inline-flex; align-items: center;
+    margin: 0 4px;
+    color: var(--accent);
+    font-size: 1.2rem;
+  }
+
+  /* ── SUMMARY GRID ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .summary-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.25s;
+  }
+  .summary-item:hover {
+    border-color: var(--sqlite-light);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+  .summary-item .icon { font-size: 1.6rem; margin-bottom: 10px; }
+  .summary-item strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .summary-item span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 50px 40px;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+  footer .series {
+    display: flex; justify-content: center; gap: 16px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  footer .series-item {
+    padding: 6px 14px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+  footer .series-item.current {
+    border-color: var(--sqlite-light);
+    color: var(--sqlite-light);
+    background: rgba(0,151,178,0.08);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .hero { padding: 100px 28px 60px; }
+    main { padding: 0 20px 80px; }
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .scroll-hint { left: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="db-icon">🗄</div>
+    SQLite3 & Python
+  </div>
+  <ul class="nav-links">
+    <li><a href="#intro">SQLite3</a></li>
+    <li><a href="#arquitetura">Arquitetura</a></li>
+    <li><a href="#conexao">Conexão</a></li>
+    <li><a href="#crud">CRUD</a></li>
+    <li><a href="#pandas">Pandas</a></li>
+    <li><a href="#projeto">Projeto</a></li>
+    <li><a href="#avancado">Avançado</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Aula 03 · Série Python para Dados</div>
+    <h1>Banco de Dados com<br><span class="highlight">SQLite3</span></h1>
+    <p class="hero-subtitle">
+      Persistência real de dados com SQL puro dentro do Python — sem servidor, sem configuração, sem desculpas.
+      Usaremos os mesmos dados das aulas anteriores, agora armazenados de forma estruturada.
+    </p>
+    <div class="hero-pills">
+      <span class="pill active">✓ Aula 01 · Pandas</span>
+      <span class="pill active">✓ Aula 02 · CSV & Análise</span>
+      <span class="pill">→ Aula 03 · SQLite3</span>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    role para começar
+  </div>
+</section>
+
+<!-- MAIN -->
+<main>
+
+  <!-- PROGRESS -->
+  <div class="progress-track">
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+    <div class="progress-step done"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+  </div>
+
+  <!-- ── 1. INTRODUÇÃO AMPLIADA ── -->
+  <section id="intro">
+    <div class="section-label">01 · Fundamentos</div>
+    <h2>O que é SQLite3?</h2>
+    <p>
+      SQLite é um banco de dados relacional <strong style="color:var(--ink)">embutido</strong> — ele vive dentro de um único arquivo
+      <code style="font-family:'DM Mono',monospace;color:var(--accent)">.db</code> no seu disco e não precisa de nenhum servidor rodando em background.
+      O módulo <code style="font-family:'DM Mono',monospace;color:var(--accent)">sqlite3</code> já vem na biblioteca padrão do Python, sem instalar nada.
+    </p>
+    <p>
+      Diferente de bancos como MySQL ou PostgreSQL, o SQLite não tem processo separado, não exige configuração de usuário/senha
+      e funciona em qualquer sistema operacional. Isso o torna ideal para protótipos, aplicações embarcadas, scripts de análise de dados e ensino.
+    </p>
+
+    <div class="info-box">
+      <div class="icon">💡</div>
+      <p>Nas aulas anteriores usamos o <strong>Pandas</strong> para ler e manipular CSVs na memória. Com o SQLite3, os dados ficam <strong>salvos em disco</strong> de forma estruturada e consultável com SQL — e você pode combinar os dois livremente.</p>
+    </div>
+
+    <h3><span class="step-num">📊</span> Comparativo: CSV vs Pandas vs SQLite3</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Característica</th>
+            <th>CSV puro</th>
+            <th>CSV + Pandas</th>
+            <th>SQLite3</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Persistência</td><td class="td-desc">Arquivo plano</td><td class="td-desc">Arquivo plano</td><td class="td-kw">Banco relacional</td></tr>
+          <tr><td>Múltiplas tabelas</td><td class="td-desc">Vários arquivos</td><td class="td-desc">Merge manual</td><td class="td-kw">JOIN automático</td></tr>
+          <tr><td>Filtragem</td><td class="td-desc">Manual / awk</td><td class="td-desc">df[df["col"] > x]</td><td class="td-kw">WHERE col > x</td></tr>
+          <tr><td>Agregação</td><td class="td-desc">Não nativa</td><td class="td-desc">groupby()</td><td class="td-kw">GROUP BY + funções</td></tr>
+          <tr><td>Integridade dos dados</td><td class="td-desc">Nenhuma</td><td class="td-desc">Validação manual</td><td class="td-kw">Constraints, FK, UNIQUE</td></tr>
+          <tr><td>Concorrência</td><td class="td-desc">Nenhuma</td><td class="td-desc">Nenhuma</td><td class="td-kw">Leitura simultânea</td></tr>
+          <tr><td>Instalação</td><td class="td-kw">Zero</td><td class="td-desc">pip install pandas</td><td class="td-kw">já incluso no Python</td></tr>
+          <tr><td>Ideal para</td><td class="td-desc">Dados simples</td><td class="td-desc">Análise exploratória</td><td class="td-kw">Apps, APIs, protótipos</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3><span class="step-num">🏗</span> Como o SQLite funciona por dentro</h3>
+    <p>Todo banco SQLite é um único arquivo binário com extensão <code style="font-family:'DM Mono',monospace;color:var(--accent)">.db</code> (ou <code style="font-family:'DM Mono',monospace;color:var(--accent)">.sqlite</code>). Dentro dele existem páginas de 4KB organizadas em estrutura B-tree. Você não precisa saber disso para usar, mas entender a estrutura ajuda a tomar decisões.</p>
+
+    <div class="card">
+      <h3><span class="step-num">📐</span> Tipos de dados do SQLite — Dynamic Typing</h3>
+      <p>O SQLite usa um sistema chamado <strong style="color:var(--ink)">type affinity</strong>: diferente do SQL tradicional, ele é flexível quanto ao tipo real armazenado. Na prática você declara os tipos, mas o banco aceita variações.</p>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead>
+            <tr><th>Tipo SQLite</th><th>Equivalente Python</th><th>Exemplos</th><th>Observação</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="td-type">INTEGER</td><td class="td-kw">int</td><td class="td-desc">1, -5, 2024</td><td class="td-desc">Armazenado em 1 a 8 bytes</td></tr>
+            <tr><td class="td-type">REAL</td><td class="td-kw">float</td><td class="td-desc">3.14, -0.5</td><td class="td-desc">Ponto flutuante IEEE 754</td></tr>
+            <tr><td class="td-type">TEXT</td><td class="td-kw">str</td><td class="td-desc">"Ana", "SP"</td><td class="td-desc">UTF-8 por padrão</td></tr>
+            <tr><td class="td-type">BLOB</td><td class="td-kw">bytes</td><td class="td-desc">b"\x89PNG..."</td><td class="td-desc">Dados binários sem conversão</td></tr>
+            <tr><td class="td-type">NULL</td><td class="td-kw">None</td><td class="td-desc">NULL</td><td class="td-desc">Ausência de valor</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="warn-box" style="margin-top:16px">
+        <div class="icon">⚠️</div>
+        <p>SQLite <strong>não tem tipo DATE nativo</strong>. Datas são armazenadas como TEXT (<code style="font-family:'DM Mono',monospace">"2024-01-10"</code>), INTEGER (Unix timestamp) ou REAL (Julianday). O Pandas lida com isso automaticamente ao usar <code style="font-family:'DM Mono',monospace">pd.to_datetime()</code> após a leitura.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="step-num">🔒</span> Constraints — garantindo a qualidade dos dados</h3>
+      <p>Constraints são regras aplicadas diretamente no banco que impedem dados inválidos de entrar, mesmo que o código Python não valide.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">constraints.sql</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="sql-cm">-- NOT NULL: campo obrigatório</span>
+<span class="sql-cm">-- UNIQUE: valor não se repete na tabela</span>
+<span class="sql-cm">-- DEFAULT: valor padrão se não informado</span>
+<span class="sql-cm">-- CHECK: validação customizada</span>
+<span class="sql-cm">-- FOREIGN KEY: integridade referencial</span>
+
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-tb">funcionarios</span> (
+    id               <span class="td-type">INTEGER</span>  <span class="sql-kw">PRIMARY KEY AUTOINCREMENT</span>,
+    nome             <span class="td-type">TEXT</span>     <span class="sql-kw">NOT NULL</span>,
+    idade            <span class="td-type">REAL</span>     <span class="sql-kw">CHECK</span>(idade > <span class="num">0</span> <span class="sql-kw">AND</span> idade &lt; <span class="num">120</span>),
+    cidade           <span class="td-type">TEXT</span>     <span class="sql-kw">DEFAULT</span> <span class="sql-str">'Não informada'</span>,
+    salario          <span class="td-type">REAL</span>     <span class="sql-kw">CHECK</span>(salario >= <span class="num">0</span>),
+    data_contratacao <span class="td-type">TEXT</span>
+);
+
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-tb">livros</span> (
+    id      <span class="td-type">INTEGER</span>  <span class="sql-kw">PRIMARY KEY AUTOINCREMENT</span>,
+    titulo  <span class="td-type">TEXT</span>     <span class="sql-kw">NOT NULL</span>,
+    autor   <span class="td-type">TEXT</span>,
+    isbn    <span class="td-type">TEXT</span>     <span class="sql-kw">UNIQUE</span>,   <span class="sql-cm">-- ISBN não pode se repetir</span>
+    paginas <span class="td-type">INTEGER</span>  <span class="sql-kw">CHECK</span>(paginas > <span class="num">0</span>),
+    ano     <span class="td-type">INTEGER</span>  <span class="sql-kw">CHECK</span>(ano > <span class="num">1800</span> <span class="sql-kw">AND</span> ano &lt;= <span class="num">2100</span>)
+);
+
+<span class="sql-kw">CREATE TABLE</span> <span class="sql-tb">emprestimos</span> (
+    id             <span class="td-type">INTEGER</span> <span class="sql-kw">PRIMARY KEY AUTOINCREMENT</span>,
+    livro_id       <span class="td-type">INTEGER</span> <span class="sql-kw">NOT NULL REFERENCES</span> <span class="sql-tb">livros</span>(id),
+    funcionario_id <span class="td-type">INTEGER</span> <span class="sql-kw">NOT NULL REFERENCES</span> <span class="sql-tb">funcionarios</span>(id),
+    data_retirada  <span class="td-type">TEXT</span>    <span class="sql-kw">NOT NULL</span>,
+    data_devolucao <span class="td-type">TEXT</span>    <span class="sql-cm">-- NULL = ainda emprestado</span>
+);</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="step-num">🔍</span> Inspecionando o banco — sqlite_master</h3>
+      <p>O SQLite guarda informações sobre suas próprias tabelas numa tabela especial chamada <code style="font-family:'DM Mono',monospace;color:var(--accent)">sqlite_master</code>. Útil para debug e introspecção.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">inspecao.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> sqlite3
+
+conn   = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+cursor = conn.<span class="fn">cursor</span>()
+
+<span class="cm"># Lista todas as tabelas do banco</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT name FROM sqlite_master WHERE type='table'"</span>)
+tabelas = cursor.<span class="fn">fetchall</span>()
+<span class="kw">print</span>(<span class="str">"Tabelas:"</span>, tabelas)
+
+<span class="cm"># Ver o SQL de criação de uma tabela</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT sql FROM sqlite_master WHERE name='livros'"</span>)
+<span class="kw">print</span>(cursor.<span class="fn">fetchone</span>()[<span class="num">0</span>])
+
+<span class="cm"># Descrição das colunas de uma tabela</span>
+cursor.<span class="fn">execute</span>(<span class="str">"PRAGMA table_info(funcionarios)"</span>)
+<span class="kw">for</span> col <span class="kw">in</span> cursor.<span class="fn">fetchall</span>():
+    <span class="cm"># (cid, name, type, notnull, dflt_value, pk)</span>
+    <span class="kw">print</span>(<span class="str">f"Coluna: {col[1]:20} | Tipo: {col[2]:10} | NOT NULL: {bool(col[3])}"</span>)
+
+<span class="cm"># Contar registros em cada tabela</span>
+<span class="kw">for</span> (nome,) <span class="kw">in</span> tabelas:
+    cursor.<span class="fn">execute</span>(<span class="str">f"SELECT COUNT(*) FROM {nome}"</span>)
+    qtd = cursor.<span class="fn">fetchone</span>()[<span class="num">0</span>]
+    <span class="kw">print</span>(<span class="str">f"  {nome}: {qtd} registros"</span>)
+
+conn.<span class="fn">close</span>()</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="step-num">⚙️</span> PRAGMAs — configurando o comportamento do banco</h3>
+      <p>PRAGMAs são comandos especiais do SQLite para configurar o banco. Os mais importantes:</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">pragmas.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># Ativar chaves estrangeiras (DESATIVADO por padrão!)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"PRAGMA foreign_keys = ON"</span>)
+
+<span class="cm"># Melhorar performance com WAL mode (Write-Ahead Logging)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"PRAGMA journal_mode = WAL"</span>)
+
+<span class="cm"># Ver tamanho do banco em páginas</span>
+cursor.<span class="fn">execute</span>(<span class="str">"PRAGMA page_count"</span>)
+<span class="kw">print</span>(<span class="str">"Páginas:"</span>, cursor.<span class="fn">fetchone</span>()[<span class="num">0</span>])
+
+<span class="cm"># Ver versão do SQLite</span>
+<span class="kw">print</span>(<span class="str">"SQLite versão:"</span>, sqlite3.sqlite_version)
+<span class="kw">print</span>(<span class="str">"Módulo versão: "</span>, sqlite3.version)</pre>
+      </div>
+      <div class="tip-box" style="margin-top:16px">
+        <div class="icon">✅</div>
+        <p><strong>PRAGMA foreign_keys = ON</strong> deve ser executado sempre ao abrir uma conexão. Por padrão, o SQLite ignora violações de chave estrangeira — ativá-lo garante a integridade referencial entre tabelas.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── ARQUITETURA ── -->
+  <section id="arquitetura">
+    <div class="section-label">01b · Arquitetura</div>
+    <h2>Como o SQLite se encaixa no seu projeto</h2>
+    <p>O SQLite não é um substituto para PostgreSQL em produção — ele tem um papel específico no ecossistema. Entender onde ele brilha evita frustrações.</p>
+
+    <div class="card card-accent">
+      <h3><span class="step-num">✅</span> Use SQLite quando...</h3>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>Cenário</th><th>Por quê funciona</th></tr></thead>
+          <tbody>
+            <tr><td class="td-kw">Scripts de análise de dados</td><td class="td-desc">Persistência leve sem servidor</td></tr>
+            <tr><td class="td-kw">Aplicações desktop/mobile</td><td class="td-desc">Um arquivo portável = o banco inteiro</td></tr>
+            <tr><td class="td-kw">Protótipos e MVPs</td><td class="td-desc">Zero configuração, começa imediato</td></tr>
+            <tr><td class="td-kw">Testes automatizados</td><td class="td-desc">Banco em memória (:memory:) é instantâneo</td></tr>
+            <tr><td class="td-kw">Dados de configuração</td><td class="td-desc">Substitui JSONs e INIs complexos</td></tr>
+            <tr><td class="td-kw">Cache local de APIs</td><td class="td-desc">Evita requisições repetidas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card card-warn">
+      <h3><span class="step-num">⚠️</span> Evite SQLite quando...</h3>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>Cenário</th><th>Alternativa recomendada</th></tr></thead>
+          <tbody>
+            <tr><td class="td-desc">Múltiplos processos escrevendo simultaneamente</td><td class="td-kw">PostgreSQL</td></tr>
+            <tr><td class="td-desc">Banco em servidor compartilhado por rede</td><td class="td-kw">MySQL / PostgreSQL</td></tr>
+            <tr><td class="td-desc">Datasets acima de ~1GB com muitas escritas</td><td class="td-kw">DuckDB / PostgreSQL</td></tr>
+            <tr><td class="td-desc">Replicação e alta disponibilidade</td><td class="td-kw">PostgreSQL</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── 2. CONEXÃO ── -->
+  <section id="conexao">
+    <div class="section-label">02 · Primeiros Passos</div>
+    <h2>Conectando e Criando Tabelas</h2>
+
+    <p>O fluxo básico do SQLite3 tem sempre três atores: a <strong style="color:var(--ink)">conexão</strong>, o <strong style="color:var(--ink)">cursor</strong> e os <strong style="color:var(--ink)">commits</strong>.</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-label">sqlite3_basico.py</div>
+        <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+      </div>
+      <pre><span class="kw">import</span> sqlite3
+
+<span class="cm"># Conecta ao banco (cria o arquivo se não existir)</span>
+conn = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+
+<span class="cm"># Cursor é o "executor" dos comandos SQL</span>
+cursor = conn.<span class="fn">cursor</span>()
+
+<span class="cm"># Cria tabela de funcionários (igual ao DataFrame das aulas anteriores!)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    CREATE TABLE IF NOT EXISTS funcionarios (
+        id        INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome      TEXT    NOT NULL,
+        idade     REAL,
+        cidade    TEXT,
+        salario   REAL,
+        data_contratacao TEXT
+    )
+"""</span>)
+
+<span class="cm"># Salva as mudanças no disco</span>
+conn.<span class="fn">commit</span>()
+
+<span class="kw">print</span>(<span class="str">"Banco criado com sucesso! 🗄"</span>)</pre>
+    </div>
+
+    <div class="tip-box">
+      <div class="icon">✅</div>
+      <p><strong>PRIMARY KEY AUTOINCREMENT</strong> — o SQLite gera o <code style="font-family:'DM Mono',monospace">id</code> automaticamente a cada linha inserida, sem você precisar controlar. O <strong>IF NOT EXISTS</strong> evita erros se rodar o script mais de uma vez.</p>
+    </div>
+
+    <h3><span class="step-num">🧩</span> Estrutura da nossa base</h3>
+    <div class="schema-box">
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+        <div class="schema-table">
+          <div class="schema-header">📋 funcionarios</div>
+          <div class="schema-row"><span class="pk">🔑 PK</span> id <span class="type-tag">INTEGER</span></div>
+          <div class="schema-row">nome <span class="type-tag">TEXT</span></div>
+          <div class="schema-row">idade <span class="type-tag">REAL</span></div>
+          <div class="schema-row">cidade <span class="type-tag">TEXT</span></div>
+          <div class="schema-row">salario <span class="type-tag">REAL</span></div>
+          <div class="schema-row">data_contratacao <span class="type-tag">TEXT</span></div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:1.5rem;color:var(--accent);padding-top:60px">⟵ JOIN ⟶</div>
+        <div class="schema-table">
+          <div class="schema-header">📚 livros</div>
+          <div class="schema-row"><span class="pk">🔑 PK</span> id <span class="type-tag">INTEGER</span></div>
+          <div class="schema-row">titulo <span class="type-tag">TEXT</span></div>
+          <div class="schema-row">autor <span class="type-tag">TEXT</span></div>
+          <div class="schema-row">isbn <span class="type-tag">TEXT</span></div>
+          <div class="schema-row">paginas <span class="type-tag">INTEGER</span></div>
+          <div class="schema-row">ano <span class="type-tag">INTEGER</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── 3. CRUD ── -->
+  <section id="crud">
+    <div class="section-label">03 · Operações Essenciais</div>
+    <h2>CRUD — Create, Read, Update, Delete</h2>
+
+    <!-- INSERT -->
+    <div class="card">
+      <h3><span class="step-num">C</span> INSERT — Inserindo dados</h3>
+      <p>Usamos <strong style="color:var(--ink)">parâmetros com ?</strong> para proteger contra SQL Injection. Nunca concatene strings diretamente!</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">insert.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># ── Inserir um único registro ──</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    INSERT INTO funcionarios (nome, idade, cidade, salario, data_contratacao)
+    VALUES (?, ?, ?, ?, ?)
+"""</span>, (<span class="str">"Ana"</span>, <span class="num">23</span>, <span class="str">"SP"</span>, <span class="num">3000.0</span>, <span class="str">"2020-01-10"</span>))
+
+<span class="cm"># ── Inserir vários de uma vez com executemany ──</span>
+funcionarios = [
+    (<span class="str">"Bruno"</span>,   <span class="num">35</span>, <span class="str">"RJ"</span>, <span class="num">5000.0</span>, <span class="str">"2019-03-15"</span>),
+    (<span class="str">"Carlos"</span>,  <span class="num">29</span>, <span class="str">"SP"</span>, <span class="num">4000.0</span>, <span class="str">"2021-07-22"</span>),
+    (<span class="str">"Daniela"</span>, <span class="kw">None</span>, <span class="str">"MG"</span>, <span class="num">3500.0</span>, <span class="str">"2018-11-30"</span>),
+    (<span class="str">"Eduardo"</span>, <span class="num">40</span>, <span class="str">"RJ"</span>, <span class="kw">None</span>,  <span class="str">"2022-05-10"</span>),
+]
+
+cursor.<span class="fn">executemany</span>(<span class="str">"""
+    INSERT INTO funcionarios (nome, idade, cidade, salario, data_contratacao)
+    VALUES (?, ?, ?, ?, ?)
+"""</span>, funcionarios)
+
+conn.<span class="fn">commit</span>()
+<span class="kw">print</span>(<span class="str">f"Linhas inseridas: {cursor.rowcount}"</span>)</pre>
+      </div>
+      <div class="warn-box">
+        <div class="icon">⚠️</div>
+        <p>Sempre use <code style="font-family:'DM Mono',monospace">?</code> como placeholder. <strong>Nunca</strong> faça: <code style="font-family:'DM Mono',monospace;color:var(--accent3)">f"INSERT ... VALUES ('{nome}')"</code> — isso abre brechas de segurança graves.</p>
+      </div>
+    </div>
+
+    <!-- SELECT -->
+    <div class="card">
+      <h3><span class="step-num">R</span> SELECT — Consultando dados</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">select.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># fetchall() → lista de tuplas</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT * FROM funcionarios"</span>)
+todos = cursor.<span class="fn">fetchall</span>()
+<span class="kw">for</span> linha <span class="kw">in</span> todos:
+    <span class="kw">print</span>(linha)
+
+<span class="cm"># fetchone() → apenas a primeira linha</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT nome, salario FROM funcionarios WHERE cidade = ?"</span>, (<span class="str">"SP"</span>,))
+primeiro = cursor.<span class="fn">fetchone</span>()
+<span class="kw">print</span>(<span class="str">f"Primeiro de SP: {primeiro}"</span>)
+
+<span class="cm"># Filtros, ordenação e limite</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    SELECT nome, salario
+    FROM funcionarios
+    WHERE salario > 3500
+    ORDER BY salario DESC
+    LIMIT 3
+"""</span>)
+<span class="kw">print</span>(cursor.<span class="fn">fetchall</span>())
+
+<span class="cm"># Contagem e agregação</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    SELECT cidade, COUNT(*) AS total, AVG(salario) AS media_salarial
+    FROM funcionarios
+    GROUP BY cidade
+    ORDER BY media_salarial DESC
+"""</span>)
+<span class="kw">for</span> row <span class="kw">in</span> cursor.<span class="fn">fetchall</span>():
+    <span class="kw">print</span>(<span class="str">f"Cidade: {row[0]} | Total: {row[1]} | Média: R$ {row[2]:.2f}"</span>)</pre>
+      </div>
+    </div>
+
+    <!-- UPDATE -->
+    <div class="card">
+      <h3><span class="step-num">U</span> UPDATE — Atualizando dados</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">update.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># Atualizar salário de um funcionário específico</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    UPDATE funcionarios
+    SET salario = ?
+    WHERE nome = ?
+"""</span>, (<span class="num">5500.0</span>, <span class="str">"Bruno"</span>))
+conn.<span class="fn">commit</span>()
+<span class="kw">print</span>(<span class="str">f"Linhas afetadas: {cursor.rowcount}"</span>)
+
+<span class="cm"># Atualizar com lógica condicional (equivalente ao .apply() do Pandas)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    UPDATE funcionarios
+    SET salario = salario * 1.1
+    WHERE cidade = 'SP' AND salario < 4000
+"""</span>)
+conn.<span class="fn">commit</span>()</pre>
+      </div>
+    </div>
+
+    <!-- DELETE -->
+    <div class="card">
+      <h3><span class="step-num">D</span> DELETE — Removendo dados</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">delete.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># Deletar um registro específico</span>
+cursor.<span class="fn">execute</span>(<span class="str">"DELETE FROM funcionarios WHERE id = ?"</span>, (<span class="num">5</span>,))
+conn.<span class="fn">commit</span>()
+
+<span class="cm"># CUIDADO: DELETE sem WHERE apaga tudo!</span>
+<span class="cm"># cursor.execute("DELETE FROM funcionarios")  ← não faça isso por acidente</span>
+
+<span class="cm"># Para limpar tudo com segurança, prefira:</span>
+<span class="cm"># cursor.execute("DELETE FROM funcionarios WHERE 1=1")</span>
+<span class="cm"># conn.commit()</span></pre>
+      </div>
+    </div>
+
+    <!-- Context Manager -->
+    <div class="card card-accent">
+      <h3><span class="step-num">🔒</span> Usando Context Manager (modo recomendado)</h3>
+      <p>O bloco <code style="font-family:'DM Mono',monospace;color:var(--accent)">with</code> faz o commit automaticamente e reverte em caso de erro — mais seguro e elegante.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">with_statement.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> sqlite3
+
+<span class="kw">with</span> sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>) <span class="kw">as</span> conn:
+    cursor = conn.<span class="fn">cursor</span>()
+    cursor.<span class="fn">execute</span>(<span class="str">"""
+        INSERT INTO funcionarios (nome, idade, cidade, salario, data_contratacao)
+        VALUES (?, ?, ?, ?, ?)
+    """</span>, (<span class="str">"Fernanda"</span>, <span class="num">28</span>, <span class="str">"SP"</span>, <span class="num">4200.0</span>, <span class="str">"2023-01-15"</span>))
+    <span class="cm"># commit() automático ao sair do bloco with</span>
+    <span class="cm"># rollback() automático se houver exceção</span>
+
+<span class="kw">print</span>(<span class="str">"Inserido com segurança!"</span>)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── 4. PANDAS + SQLITE ── -->
+  <section id="pandas">
+    <div class="section-label">04 · Integração com Pandas</div>
+    <h2>Pandas + SQLite3 — usando os dados das aulas anteriores</h2>
+    <p>
+      Nas aulas anteriores construímos um DataFrame de funcionários com <strong style="color:var(--ink)">Ana, Bruno, Carlos, Daniela e Eduardo</strong>,
+      aplicamos limpeza de dados com <code style="font-family:'DM Mono',monospace;color:var(--accent)">fillna()</code>, criamos colunas derivadas, fizemos
+      <code style="font-family:'DM Mono',monospace;color:var(--accent)">groupby()</code> e merge. Agora vamos <strong style="color:var(--ink)">persistir tudo isso no SQLite</strong>
+      e combinar com o <strong style="color:var(--ink)">livros.csv</strong>.
+    </p>
+
+    <div class="info-box">
+      <div class="icon">🔁</div>
+      <p>O Pandas tem duas funções-chave para trabalhar com bancos SQL: <code style="font-family:'DM Mono',monospace">DataFrame.to_sql()</code> para gravar dados no banco, e <code style="font-family:'DM Mono',monospace">pd.read_sql_query()</code> para ler qualquer query SQL de volta como DataFrame. Simples assim.</p>
+    </div>
+
+    <!-- RECRIANDO OS DADOS DA AULA ANTERIOR -->
+    <div class="card">
+      <h3><span class="step-num">1</span> Recriando o DataFrame da Aula 01 e salvando no SQLite</h3>
+      <p>Exatamente os mesmos dados que usamos no notebook <strong style="color:var(--ink)">PandasPratica.ipynb</strong> — agora sendo persistidos num banco real.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">aula01_para_sqlite.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> sqlite3
+
+<span class="cm"># ══════════════════════════════════════════════
+#  DADOS DA AULA 01 — exatamente como no notebook
+# ══════════════════════════════════════════════</span>
+dados = {
+    <span class="str">"nome"</span>: [<span class="str">"Ana"</span>, <span class="str">"Bruno"</span>, <span class="str">"Carlos"</span>, <span class="str">"Daniela"</span>, <span class="str">"Eduardo"</span>],
+    <span class="str">"idade"</span>: [<span class="num">23</span>, <span class="num">35</span>, <span class="num">29</span>, np.nan, <span class="num">40</span>],
+    <span class="str">"cidade"</span>: [<span class="str">"SP"</span>, <span class="str">"RJ"</span>, <span class="str">"SP"</span>, <span class="str">"MG"</span>, <span class="str">"RJ"</span>],
+    <span class="str">"salario"</span>: [<span class="num">3000</span>, <span class="num">5000</span>, <span class="num">4000</span>, <span class="num">3500</span>, np.nan],
+    <span class="str">"data_contratacao"</span>: pd.<span class="fn">to_datetime</span>([
+        <span class="str">"2020-01-10"</span>, <span class="str">"2019-03-15"</span>, <span class="str">"2021-07-22"</span>, <span class="str">"2018-11-30"</span>, <span class="str">"2022-05-10"</span>
+    ])
+}
+df = pd.<span class="fn">DataFrame</span>(dados)
+
+<span class="cm"># ══════════════════════════════════════════════
+#  LIMPEZA — igual ao que fizemos na Aula 01
+# ══════════════════════════════════════════════</span>
+df[<span class="str">"idade"</span>]   = df[<span class="str">"idade"</span>].<span class="fn">fillna</span>(df[<span class="str">"idade"</span>].<span class="fn">mean</span>())       <span class="cm"># Daniela → 31.75</span>
+df[<span class="str">"salario"</span>] = df[<span class="str">"salario"</span>].<span class="fn">fillna</span>(df[<span class="str">"salario"</span>].<span class="fn">median</span>()) <span class="cm"># Eduardo → 3750.0</span>
+
+<span class="cm"># Colunas derivadas da Aula 01</span>
+df[<span class="str">"salario_anual"</span>]    = df[<span class="str">"salario"</span>] * <span class="num">12</span>
+df[<span class="str">"ano_contratacao"</span>]  = df[<span class="str">"data_contratacao"</span>].dt.year
+df[<span class="str">"categoria_salario"</span>] = df[<span class="str">"salario"</span>].<span class="fn">apply</span>(
+    <span class="kw">lambda</span> x: <span class="str">"Alto"</span> <span class="kw">if</span> x > <span class="num">4500</span> <span class="kw">else</span> <span class="str">"Médio"</span> <span class="kw">if</span> x > <span class="num">3000</span> <span class="kw">else</span> <span class="str">"Baixo"</span>
+)
+
+<span class="cm"># Converte data para string antes de salvar (SQLite não tem tipo DATE)</span>
+df[<span class="str">"data_contratacao"</span>] = df[<span class="str">"data_contratacao"</span>].<span class="fn">astype</span>(<span class="kw">str</span>)
+
+<span class="kw">print</span>(df)
+<span class="cm">#        nome  idade cidade  salario data_contratacao  salario_anual  ano_contratacao categoria_salario
+# 0       Ana  23.00     SP   3000.0       2020-01-10        36000.0             2020             Baixo
+# 1     Bruno  35.00     RJ   5000.0       2019-03-15        60000.0             2019              Alto
+# 2    Carlos  29.00     SP   4000.0       2021-07-22        48000.0             2021             Médio
+# 3   Daniela  31.75     MG   3500.0       2018-11-30        42000.0             2018             Médio
+# 4   Eduardo  40.00     RJ   3750.0       2022-05-10        45000.0             2022             Médio</span>
+
+<span class="cm"># ══════════════════════════════════════════════
+#  PERSISTE NO SQLITE
+# ══════════════════════════════════════════════</span>
+<span class="kw">with</span> sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>) <span class="kw">as</span> conn:
+    df.<span class="fn">to_sql</span>(
+        name=<span class="str">"funcionarios"</span>,
+        con=conn,
+        if_exists=<span class="str">"replace"</span>,  <span class="cm"># recria se já existir</span>
+        index=<span class="kw">False</span>           <span class="cm"># não salva o índice do pandas</span>
+    )
+    <span class="kw">print</span>(<span class="str">f"\n✅ {len(df)} funcionários salvos no banco."</span>)</pre>
+      </div>
+    </div>
+
+    <!-- LIVROS.CSV -->
+    <div class="card">
+      <h3><span class="step-num">2</span> Importando o livros.csv da Aula 02</h3>
+      <p>O <strong style="color:var(--ink)">livros.csv</strong> tem separador <code style="font-family:'DM Mono',monospace;color:var(--accent)">;</code>, contém entradas com <code style="font-family:'DM Mono',monospace;color:var(--accent)">paginas = 0</code> (dados inválidos) e duplicatas por ISBN. Vamos aplicar a mesma limpeza da Aula 02 antes de inserir no banco.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">livros_para_sqlite.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> sqlite3
+
+<span class="cm"># ── Leitura ──</span>
+df_livros = pd.<span class="fn">read_csv</span>(<span class="str">"livros.csv"</span>, sep=<span class="str">";"</span>)
+<span class="kw">print</span>(<span class="str">f"Antes da limpeza: {len(df_livros)} registros"</span>)
+<span class="kw">print</span>(df_livros.<span class="fn">head</span>())
+<span class="cm">#                           titulo          autor           isbn  paginas   ano
+# 0         Orçamento sem falhas  Nath Finanças  9786555601565      128  2021
+# 1       Minha Sombria Vanessa  Kate Elizabeth  9788551006276      432  2020
+# ...</span>
+
+<span class="cm"># ── Limpeza ──</span>
+<span class="cm"># Remove livros com 0 páginas (entrada inválida)</span>
+df_livros = df_livros[df_livros[<span class="str">"paginas"</span>] > <span class="num">0</span>]
+
+<span class="cm"># Remove duplicatas mantendo a primeira ocorrência por ISBN</span>
+df_livros = df_livros.<span class="fn">drop_duplicates</span>(subset=<span class="str">"isbn"</span>, keep=<span class="str">"first"</span>)
+
+<span class="cm"># Remove espaços extras nos títulos (ex: "Uma chance de lutar; Elizabeth Warren")</span>
+df_livros[<span class="str">"titulo"</span>] = df_livros[<span class="str">"titulo"</span>].<span class="fn">str</span>.<span class="fn">strip</span>()
+df_livros[<span class="str">"autor"</span>]  = df_livros[<span class="str">"autor"</span>].<span class="fn">str</span>.<span class="fn">strip</span>()
+
+<span class="cm"># Colunas derivadas úteis</span>
+df_livros[<span class="str">"categoria_tamanho"</span>] = pd.<span class="fn">cut</span>(
+    df_livros[<span class="str">"paginas"</span>],
+    bins=[<span class="num">0</span>, <span class="num">150</span>, <span class="num">300</span>, <span class="num">500</span>, <span class="num">9999</span>],
+    labels=[<span class="str">"Curto"</span>, <span class="str">"Médio"</span>, <span class="str">"Longo"</span>, <span class="str">"Extenso"</span>]
+)
+
+<span class="kw">print</span>(<span class="str">f"Após limpeza: {len(df_livros)} registros"</span>)
+<span class="kw">print</span>(df_livros.<span class="fn">describe</span>())
+
+<span class="cm"># ── Persiste no SQLite ──</span>
+<span class="kw">with</span> sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>) <span class="kw">as</span> conn:
+    df_livros.<span class="fn">to_sql</span>(<span class="str">"livros"</span>, conn, if_exists=<span class="str">"replace"</span>, index=<span class="kw">False</span>)
+    <span class="kw">print</span>(<span class="str">f"\n✅ {len(df_livros)} livros importados para o banco."</span>)</pre>
+      </div>
+    </div>
+
+    <!-- READ_SQL_QUERY -->
+    <div class="card">
+      <h3><span class="step-num">3</span> Consultando dados com SQL e analisando com Pandas</h3>
+      <p>Com <code style="font-family:'DM Mono',monospace;color:var(--accent)">pd.read_sql_query()</code> qualquer query SQL vira um DataFrame. Você usa SQL para filtrar e agregar no banco, e Pandas para análise posterior.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">consultas_pandas.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> sqlite3
+
+conn = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+
+<span class="cm"># ── Equivalente ao groupby("cidade")["salario"].mean() da Aula 01 ──</span>
+df_cidades = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        cidade,
+        COUNT(*)        AS total_funcionarios,
+        ROUND(AVG(salario), 2)  AS media_salarial,
+        MIN(salario)    AS menor_salario,
+        MAX(salario)    AS maior_salario
+    FROM funcionarios
+    GROUP BY cidade
+    ORDER BY media_salarial DESC
+"""</span>, conn)
+<span class="kw">print</span>(<span class="str">"Média salarial por cidade:"</span>)
+<span class="kw">print</span>(df_cidades)
+<span class="cm">#   cidade  total_funcionarios  media_salarial  menor_salario  maior_salario
+# 0     RJ                   2         4375.00         3750.0         5000.0
+# 1     SP                   2         3500.00         3000.0         4000.0
+# 2     MG                   1         3500.00         3500.0         3500.0</span>
+
+<span class="cm"># ── Funcionários com salário acima da média — equivalente ao filtro df[df.salario > x] ──</span>
+media = pd.<span class="fn">read_sql_query</span>(<span class="str">"SELECT AVG(salario) AS media FROM funcionarios"</span>, conn)[<span class="str">"media"</span>][<span class="num">0</span>]
+
+df_acima = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT nome, cidade, salario, categoria_salario
+    FROM funcionarios
+    WHERE salario > ?
+    ORDER BY salario DESC
+"""</span>, conn, params=(media,))
+<span class="kw">print</span>(<span class="str">f"\nAcima da média (R${media:.2f}):"</span>)
+<span class="kw">print</span>(df_acima)
+
+<span class="cm"># ── Análise de livros por ano — igual ao groupby da Aula 02 ──</span>
+df_anos = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        ano,
+        COUNT(*)          AS total_livros,
+        ROUND(AVG(paginas)) AS media_paginas,
+        SUM(paginas)      AS total_paginas
+    FROM livros
+    GROUP BY ano
+    ORDER BY ano DESC
+"""</span>, conn)
+<span class="kw">print</span>(<span class="str">"\nPublicações por ano:"</span>)
+<span class="kw">print</span>(df_anos.<span class="fn">head</span>(<span class="num">10</span>))
+
+<span class="cm"># ── Top autores (equivalente ao value_counts()) ──</span>
+df_autores = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT autor, COUNT(*) AS total, SUM(paginas) AS total_paginas
+    FROM livros
+    WHERE autor IS NOT NULL AND autor != ''
+    GROUP BY autor
+    HAVING COUNT(*) > 1
+    ORDER BY total DESC
+    LIMIT 10
+"""</span>, conn)
+<span class="kw">print</span>(<span class="str">"\nAutores com mais de 1 livro:"</span>)
+<span class="kw">print</span>(df_autores)
+
+conn.<span class="fn">close</span>()</pre>
+      </div>
+    </div>
+
+    <!-- MERGE / JOIN COMPARADO -->
+    <div class="card">
+      <h3><span class="step-num">4</span> JOIN no SQL vs merge() no Pandas — lado a lado</h3>
+      <p>Na Aula 01 usamos <code style="font-family:'DM Mono',monospace;color:var(--accent)">pd.merge(df, bonus, on="nome")</code>. Agora fazemos o mesmo conceito diretamente no SQL, e depois voltamos para Pandas para continuar a análise.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">join_comparado.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> sqlite3
+
+conn   = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+cursor = conn.<span class="fn">cursor</span>()
+
+<span class="cm"># ── Cria tabela de bônus (igual ao DataFrame "bonus" da Aula 01) ──</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    CREATE TABLE IF NOT EXISTS bonus (
+        nome  TEXT PRIMARY KEY,
+        bonus INTEGER
+    )
+"""</span>)
+cursor.<span class="fn">executemany</span>(
+    <span class="str">"INSERT OR REPLACE INTO bonus VALUES (?, ?)"</span>,
+    [(<span class="str">"Ana"</span>, <span class="num">500</span>), (<span class="str">"Bruno"</span>, <span class="num">1000</span>), (<span class="str">"Carlos"</span>, <span class="num">700</span>),
+     (<span class="str">"Daniela"</span>, <span class="num">600</span>), (<span class="str">"Eduardo"</span>, <span class="num">800</span>)]
+)
+conn.<span class="fn">commit</span>()
+
+<span class="cm"># ════ ABORDAGEM 1: pd.merge() — jeito Pandas ════</span>
+df_func  = pd.<span class="fn">read_sql_query</span>(<span class="str">"SELECT * FROM funcionarios"</span>, conn)
+df_bonus = pd.<span class="fn">read_sql_query</span>(<span class="str">"SELECT * FROM bonus"</span>, conn)
+df_merge_pandas = pd.<span class="fn">merge</span>(df_func, df_bonus, on=<span class="str">"nome"</span>)
+df_merge_pandas[<span class="str">"total_anual"</span>] = df_merge_pandas[<span class="str">"salario_anual"</span>] + df_merge_pandas[<span class="str">"bonus"</span>]
+<span class="kw">print</span>(<span class="str">"Merge Pandas:\n"</span>, df_merge_pandas[[<span class="str">"nome"</span>, <span class="str">"salario"</span>, <span class="str">"bonus"</span>, <span class="str">"total_anual"</span>]])
+
+<span class="cm"># ════ ABORDAGEM 2: SQL JOIN — jeito SQLite ════</span>
+df_merge_sql = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        f.nome,
+        f.cidade,
+        f.salario,
+        f.salario_anual,
+        f.categoria_salario,
+        b.bonus,
+        f.salario_anual + b.bonus AS total_anual
+    FROM funcionarios f
+    INNER JOIN bonus b ON f.nome = b.nome
+    ORDER BY total_anual DESC
+"""</span>, conn)
+<span class="kw">print</span>(<span class="str">"\nJOIN SQL:\n"</span>, df_merge_sql)
+<span class="cm">#       nome cidade  salario  salario_anual categoria_salario  bonus  total_anual
+# 0    Bruno     RJ   5000.0        60000.0              Alto   1000      61000.0
+# 1   Carlos     SP   4000.0        48000.0             Médio    700      48700.0
+# 2  Eduardo     RJ   3750.0        45000.0             Médio    800      45800.0
+# 3  Daniela     MG   3500.0        42000.0             Médio    600      42600.0
+# 4      Ana     SP   3000.0        36000.0             Baixo    500      36500.0</span>
+
+<span class="cm"># Continua no Pandas normalmente</span>
+<span class="kw">print</span>(<span class="str">"\nMédia de total_anual por cidade:"</span>)
+<span class="kw">print</span>(df_merge_sql.<span class="fn">groupby</span>(<span class="str">"cidade"</span>)[<span class="str">"total_anual"</span>].<span class="fn">mean</span>().<span class="fn">round</span>(<span class="num">2</span>))
+
+conn.<span class="fn">close</span>()</pre>
+      </div>
+    </div>
+
+    <!-- PIVOT TABLE COMPARADO -->
+    <div class="card">
+      <h3><span class="step-num">5</span> Pivot Table: Pandas vs SQL</h3>
+      <p>Na Aula 01 usamos <code style="font-family:'DM Mono',monospace;color:var(--accent)">pd.pivot_table()</code>. O SQL equivalente usa <code style="font-family:'DM Mono',monospace;color:var(--accent)">CASE WHEN</code> para pivotar colunas — mais verboso, mas roda direto no banco sem carregar tudo na memória.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">pivot_comparado.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> sqlite3
+
+conn = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+df   = pd.<span class="fn">read_sql_query</span>(<span class="str">"SELECT * FROM funcionarios"</span>, conn)
+
+<span class="cm"># ════ ABORDAGEM 1: pd.pivot_table() ════</span>
+pivot_pandas = pd.<span class="fn">pivot_table</span>(
+    df,
+    values=<span class="str">"salario"</span>,
+    index=<span class="str">"cidade"</span>,
+    columns=<span class="str">"categoria_salario"</span>,
+    aggfunc=<span class="str">"mean"</span>
+)
+<span class="kw">print</span>(<span class="str">"Pivot Pandas:\n"</span>, pivot_pandas)
+<span class="cm"># categoria_salario    Alto   Baixo   Médio
+# cidade
+# MG                    NaN     NaN  3500.0
+# RJ                 5000.0     NaN  3750.0
+# SP                    NaN  3000.0  4000.0</span>
+
+<span class="cm"># ════ ABORDAGEM 2: CASE WHEN no SQL ════</span>
+df_pivot_sql = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        cidade,
+        AVG(CASE WHEN categoria_salario = 'Alto'  THEN salario END) AS Alto,
+        AVG(CASE WHEN categoria_salario = 'Médio' THEN salario END) AS Medio,
+        AVG(CASE WHEN categoria_salario = 'Baixo' THEN salario END) AS Baixo
+    FROM funcionarios
+    GROUP BY cidade
+    ORDER BY cidade
+"""</span>, conn)
+<span class="kw">print</span>(<span class="str">"\nPivot SQL:\n"</span>, df_pivot_sql)
+
+conn.<span class="fn">close</span>()</pre>
+      </div>
+    </div>
+
+    <!-- EXPORTAÇÃO FINAL -->
+    <div class="card card-accent">
+      <h3><span class="step-num">6</span> Exportando resultados do banco para Excel/CSV</h3>
+      <p>O ciclo completo: dados entram via CSV/DataFrame, são consultados com SQL, e saem como Excel — exatamente como no <code style="font-family:'DM Mono',monospace;color:var(--accent)">resultado.xlsx</code> da Aula 01.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">exportacao_final.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> sqlite3
+
+conn = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+
+<span class="cm"># ── Funcionários com bônus (resultado do JOIN) ──</span>
+df_result = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        f.nome, f.idade, f.cidade,
+        f.salario, f.salario_anual,
+        f.categoria_salario, f.data_contratacao,
+        f.ano_contratacao,
+        b.bonus,
+        f.salario_anual + b.bonus AS total_com_bonus
+    FROM funcionarios f
+    LEFT JOIN bonus b ON f.nome = b.nome
+    ORDER BY total_com_bonus DESC
+"""</span>, conn)
+
+<span class="cm"># ── Estatísticas dos livros ──</span>
+df_livros_stats = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT ano, COUNT(*) as total, AVG(paginas) as media_pag
+    FROM livros GROUP BY ano ORDER BY ano DESC
+"""</span>, conn)
+
+<span class="cm"># ── Exporta para Excel com múltiplas abas ──</span>
+<span class="kw">with</span> pd.<span class="fn">ExcelWriter</span>(<span class="str">"resultado_completo.xlsx"</span>, engine=<span class="str">"openpyxl"</span>) <span class="kw">as</span> writer:
+    df_result.<span class="fn">to_excel</span>(writer, sheet_name=<span class="str">"Funcionarios"</span>, index=<span class="kw">False</span>)
+    df_livros_stats.<span class="fn">to_excel</span>(writer, sheet_name=<span class="str">"Livros_por_Ano"</span>, index=<span class="kw">False</span>)
+
+<span class="kw">print</span>(<span class="str">"✅ Exportado: resultado_completo.xlsx"</span>)
+conn.<span class="fn">close</span>()</pre>
+      </div>
+      <div class="tip-box" style="margin-top:16px">
+        <div class="icon">🔁</div>
+        <p>Fluxo completo da série: <strong>CSV → Pandas (limpeza, Aula 01/02) → SQLite (persistência) → SQL (consulta) → Pandas (análise) → Excel (entrega)</strong>. Cada ferramenta no que faz melhor.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── 5. PROJETO ── -->
+  <section id="projeto">
+    <div class="section-label">05 · Projeto Completo</div>
+    <h2>Projeto: Sistema Completo da Biblioteca</h2>
+    <p>Junta tudo: dados de funcionários da Aula 01, livros.csv da Aula 02, empréstimos com JOIN, e exportação final. Um script do zero ao fim.</p>
+
+    <div class="code-wrap">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-label">sistema_biblioteca.py</div>
+        <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+      </div>
+      <pre><span class="kw">import</span> sqlite3
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># ════════════════════════════════════════
+#  SETUP
+# ════════════════════════════════════════</span>
+conn   = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+cursor = conn.<span class="fn">cursor</span>()
+cursor.<span class="fn">execute</span>(<span class="str">"PRAGMA foreign_keys = ON"</span>)
+
+cursor.<span class="fn">executescript</span>(<span class="str">"""
+    DROP TABLE IF EXISTS emprestimos;
+    DROP TABLE IF EXISTS bonus;
+    DROP TABLE IF EXISTS livros;
+    DROP TABLE IF EXISTS funcionarios;
+
+    CREATE TABLE funcionarios (
+        id               INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome             TEXT    NOT NULL,
+        idade            REAL,
+        cidade           TEXT,
+        salario          REAL    CHECK(salario >= 0),
+        salario_anual    REAL,
+        data_contratacao TEXT,
+        ano_contratacao  INTEGER,
+        categoria_salario TEXT
+    );
+
+    CREATE TABLE livros (
+        id       INTEGER PRIMARY KEY AUTOINCREMENT,
+        titulo   TEXT NOT NULL,
+        autor    TEXT,
+        isbn     TEXT UNIQUE,
+        paginas  INTEGER CHECK(paginas > 0),
+        ano      INTEGER
+    );
+
+    CREATE TABLE bonus (
+        nome  TEXT PRIMARY KEY,
+        bonus INTEGER
+    );
+
+    CREATE TABLE emprestimos (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        livro_id       INTEGER NOT NULL REFERENCES livros(id),
+        funcionario_id INTEGER NOT NULL REFERENCES funcionarios(id),
+        data_retirada  TEXT    NOT NULL,
+        data_devolucao TEXT
+    );
+"""</span>)
+conn.<span class="fn">commit</span>()
+<span class="kw">print</span>(<span class="str">"✅ Tabelas criadas"</span>)
+
+<span class="cm"># ════════════════════════════════════════
+#  CARGA: FUNCIONÁRIOS (dados da Aula 01)
+# ════════════════════════════════════════</span>
+dados = {
+    <span class="str">"nome"</span>: [<span class="str">"Ana"</span>, <span class="str">"Bruno"</span>, <span class="str">"Carlos"</span>, <span class="str">"Daniela"</span>, <span class="str">"Eduardo"</span>],
+    <span class="str">"idade"</span>: [<span class="num">23</span>, <span class="num">35</span>, <span class="num">29</span>, np.nan, <span class="num">40</span>],
+    <span class="str">"cidade"</span>: [<span class="str">"SP"</span>, <span class="str">"RJ"</span>, <span class="str">"SP"</span>, <span class="str">"MG"</span>, <span class="str">"RJ"</span>],
+    <span class="str">"salario"</span>: [<span class="num">3000</span>, <span class="num">5000</span>, <span class="num">4000</span>, <span class="num">3500</span>, np.nan],
+    <span class="str">"data_contratacao"</span>: [<span class="str">"2020-01-10"</span>, <span class="str">"2019-03-15"</span>, <span class="str">"2021-07-22"</span>, <span class="str">"2018-11-30"</span>, <span class="str">"2022-05-10"</span>],
+}
+df_f = pd.<span class="fn">DataFrame</span>(dados)
+df_f[<span class="str">"idade"</span>]   = df_f[<span class="str">"idade"</span>].<span class="fn">fillna</span>(df_f[<span class="str">"idade"</span>].<span class="fn">mean</span>())
+df_f[<span class="str">"salario"</span>] = df_f[<span class="str">"salario"</span>].<span class="fn">fillna</span>(df_f[<span class="str">"salario"</span>].<span class="fn">median</span>())
+df_f[<span class="str">"salario_anual"</span>]    = df_f[<span class="str">"salario"</span>] * <span class="num">12</span>
+df_f[<span class="str">"ano_contratacao"</span>]  = pd.<span class="fn">to_datetime</span>(df_f[<span class="str">"data_contratacao"</span>]).dt.year
+df_f[<span class="str">"categoria_salario"</span>] = df_f[<span class="str">"salario"</span>].<span class="fn">apply</span>(
+    <span class="kw">lambda</span> x: <span class="str">"Alto"</span> <span class="kw">if</span> x > <span class="num">4500</span> <span class="kw">else</span> <span class="str">"Médio"</span> <span class="kw">if</span> x > <span class="num">3000</span> <span class="kw">else</span> <span class="str">"Baixo"</span>)
+df_f.<span class="fn">to_sql</span>(<span class="str">"funcionarios"</span>, conn, if_exists=<span class="str">"append"</span>, index=<span class="kw">False</span>)
+<span class="kw">print</span>(<span class="str">f"✅ {len(df_f)} funcionários inseridos"</span>)
+
+<span class="cm"># ════════════════════════════════════════
+#  CARGA: LIVROS (livros.csv da Aula 02)
+# ════════════════════════════════════════</span>
+df_l = pd.<span class="fn">read_csv</span>(<span class="str">"livros.csv"</span>, sep=<span class="str">";"</span>)
+df_l = df_l[df_l[<span class="str">"paginas"</span>] > <span class="num">0</span>].<span class="fn">drop_duplicates</span>(subset=<span class="str">"isbn"</span>)
+df_l[<span class="str">"titulo"</span>] = df_l[<span class="str">"titulo"</span>].<span class="fn">str</span>.<span class="fn">strip</span>()
+df_l[<span class="str">"autor"</span>]  = df_l[<span class="str">"autor"</span>].<span class="fn">str</span>.<span class="fn">strip</span>()
+df_l.<span class="fn">to_sql</span>(<span class="str">"livros"</span>, conn, if_exists=<span class="str">"append"</span>, index=<span class="kw">False</span>)
+<span class="kw">print</span>(<span class="str">f"✅ {len(df_l)} livros inseridos"</span>)
+
+<span class="cm"># ════════════════════════════════════════
+#  CARGA: BÔNUS (merge da Aula 01)
+# ════════════════════════════════════════</span>
+cursor.<span class="fn">executemany</span>(<span class="str">"INSERT INTO bonus VALUES (?, ?)"</span>,
+    [(<span class="str">"Ana"</span>, <span class="num">500</span>), (<span class="str">"Bruno"</span>, <span class="num">1000</span>), (<span class="str">"Carlos"</span>, <span class="num">700</span>),
+     (<span class="str">"Daniela"</span>, <span class="num">600</span>), (<span class="str">"Eduardo"</span>, <span class="num">800</span>)])
+conn.<span class="fn">commit</span>()
+
+<span class="cm"># ════════════════════════════════════════
+#  EMPRÉSTIMOS
+# ════════════════════════════════════════</span>
+cursor.<span class="fn">executemany</span>(<span class="str">"""
+    INSERT INTO emprestimos (livro_id, funcionario_id, data_retirada, data_devolucao)
+    VALUES (?, ?, ?, ?)
+"""</span>, [
+    (<span class="num">1</span>, <span class="num">1</span>, <span class="str">"2024-01-10"</span>, <span class="str">"2024-01-24"</span>),
+    (<span class="num">2</span>, <span class="num">2</span>, <span class="str">"2024-02-01"</span>, <span class="kw">None</span>),
+    (<span class="num">3</span>, <span class="num">1</span>, <span class="str">"2024-02-15"</span>, <span class="str">"2024-03-01"</span>),
+    (<span class="num">4</span>, <span class="num">3</span>, <span class="str">"2024-03-10"</span>, <span class="kw">None</span>),
+])
+conn.<span class="fn">commit</span>()
+
+<span class="cm"># ════════════════════════════════════════
+#  RELATÓRIO FINAL COM JOINS
+# ════════════════════════════════════════</span>
+df_rel = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        f.nome              AS funcionario,
+        f.cidade,
+        f.salario,
+        b.bonus,
+        f.salario + b.bonus AS salario_total,
+        l.titulo            AS livro_emprestado,
+        e.data_retirada,
+        CASE
+            WHEN e.data_devolucao IS NULL THEN '📖 Em posse'
+            ELSE '✅ Devolvido'
+        END AS status_emprestimo
+    FROM emprestimos e
+    JOIN funcionarios f ON e.funcionario_id = f.id
+    JOIN livros       l ON e.livro_id       = l.id
+    LEFT JOIN bonus   b ON f.nome           = b.nome
+    ORDER BY e.data_retirada DESC
+"""</span>, conn)
+
+<span class="kw">print</span>(<span class="str">"\n📊 RELATÓRIO DE EMPRÉSTIMOS:"</span>)
+<span class="kw">print</span>(df_rel.<span class="fn">to_string</span>(index=<span class="kw">False</span>))
+
+<span class="cm"># Exporta resultado final</span>
+df_rel.<span class="fn">to_excel</span>(<span class="str">"relatorio_biblioteca.xlsx"</span>, index=<span class="kw">False</span>)
+<span class="kw">print</span>(<span class="str">"\n📤 relatorio_biblioteca.xlsx gerado!"</span>)
+conn.<span class="fn">close</span>()</pre>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── 6. AVANÇADO ── -->
+  <section id="avancado">
+    <div class="section-label">06 · Próximo Nível</div>
+    <h2>Recursos Avançados</h2>
+
+    <!-- JOIN -->
+    <div class="card">
+      <h3><span class="step-num">🔗</span> JOIN — Cruzando tabelas</h3>
+      <p>Equivalente ao <code style="font-family:'DM Mono',monospace;color:var(--accent)">pd.merge()</code> do Pandas, mas declarativo e mais poderoso.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">joins.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># INNER JOIN — apenas onde há correspondência nos dois lados</span>
+df_emprestimos = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT
+        l.titulo,
+        l.autor,
+        f.nome      AS funcionario,
+        e.data_retirada,
+        e.data_devolucao,
+        CASE
+            WHEN e.data_devolucao IS NULL THEN 'Em aberto'
+            ELSE 'Devolvido'
+        END AS status
+    FROM emprestimos e
+    INNER JOIN livros       l ON e.livro_id       = l.id
+    INNER JOIN funcionarios f ON e.funcionario_id = f.id
+    ORDER BY e.data_retirada DESC
+"""</span>, conn)
+<span class="kw">print</span>(df_emprestimos)
+
+<span class="cm"># LEFT JOIN — todos os livros, mesmo sem empréstimo</span>
+df_todos = pd.<span class="fn">read_sql_query</span>(<span class="str">"""
+    SELECT l.titulo, COUNT(e.id) AS vezes_emprestado
+    FROM livros l
+    LEFT JOIN emprestimos e ON e.livro_id = l.id
+    GROUP BY l.id
+    ORDER BY vezes_emprestado DESC
+    LIMIT 10
+"""</span>, conn)</pre>
+      </div>
+    </div>
+
+    <!-- ÍNDICES -->
+    <div class="card">
+      <h3><span class="step-num">⚡</span> Índices — consultas rápidas</h3>
+      <p>Índices são como o sumário de um livro: tornam buscas muito mais rápidas em tabelas grandes.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">indices.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># Cria índice na coluna autor (acelera GROUP BY e WHERE por autor)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"CREATE INDEX IF NOT EXISTS idx_livros_autor ON livros(autor)"</span>)
+
+<span class="cm"># Índice composto (útil para filtros por ano E autor juntos)</span>
+cursor.<span class="fn">execute</span>(<span class="str">"""
+    CREATE INDEX IF NOT EXISTS idx_livros_ano_autor
+    ON livros(ano, autor)
+"""</span>)
+
+conn.<span class="fn">commit</span>()
+
+<span class="cm"># Ver os índices existentes</span>
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT name, sql FROM sqlite_master WHERE type='index'"</span>)
+<span class="kw">print</span>(cursor.<span class="fn">fetchall</span>())</pre>
+      </div>
+    </div>
+
+    <!-- TRANSAÇÕES -->
+    <div class="card card-warn">
+      <h3><span class="step-num">🔐</span> Transações — tudo ou nada</h3>
+      <p>Uma transação garante que um conjunto de operações seja atômico: se qualquer parte falhar, tudo é revertido.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">transacoes.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="kw">try</span>:
+    conn.<span class="fn">execute</span>(<span class="str">"BEGIN"</span>)
+    
+    <span class="cm"># Operação 1: adiciona empréstimo</span>
+    cursor.<span class="fn">execute</span>(<span class="str">"""
+        INSERT INTO emprestimos (livro_id, funcionario_id, data_retirada)
+        VALUES (?, ?, date('now'))
+    """</span>, (<span class="num">5</span>, <span class="num">2</span>))
+    
+    <span class="cm"># Operação 2: atualiza status (exemplo)</span>
+    cursor.<span class="fn">execute</span>(<span class="str">"""
+        UPDATE livros SET titulo = trim(titulo) WHERE id = ?
+    """</span>, (<span class="num">5</span>,))
+    
+    conn.<span class="fn">commit</span>()   <span class="cm"># ✅ ambas tiveram sucesso</span>
+    <span class="kw">print</span>(<span class="str">"Transação concluída!"</span>)
+
+<span class="kw">except</span> Exception <span class="kw">as</span> e:
+    conn.<span class="fn">rollback</span>()   <span class="cm"># ⛔ desfaz tudo</span>
+    <span class="kw">print</span>(<span class="str">f"Erro, rollback: {e}"</span>)</pre>
+      </div>
+    </div>
+
+    <!-- ROW FACTORY -->
+    <div class="card card-info">
+      <h3><span class="step-num">🧾</span> Row Factory — resultados como dicionário</h3>
+      <p>Por padrão, os resultados são tuplas. Com <code style="font-family:'DM Mono',monospace;color:var(--accent)">row_factory</code>, você acessa por nome de coluna.</p>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">row_factory.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre>conn = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+conn.row_factory = sqlite3.Row   <span class="cm"># ← ativa acesso por nome</span>
+cursor = conn.<span class="fn">cursor</span>()
+
+cursor.<span class="fn">execute</span>(<span class="str">"SELECT * FROM livros LIMIT 3"</span>)
+<span class="kw">for</span> row <span class="kw">in</span> cursor.<span class="fn">fetchall</span>():
+    <span class="cm"># Agora acessa pelo nome da coluna, não por índice!</span>
+    <span class="kw">print</span>(<span class="str">f"Título: {row['titulo']} | Autor: {row['autor']} | Páginas: {row['paginas']}"</span>)
+
+<span class="cm"># Converte facilmente para dicionário</span>
+row_dict = <span class="kw">dict</span>(row)
+<span class="kw">print</span>(row_dict)</pre>
+      </div>
+    </div>
+
+    <!-- BACKUP -->
+    <div class="card">
+      <h3><span class="step-num">💾</span> Backup em memória e exportação</h3>
+      <div class="code-wrap">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <div class="code-label">backup.py</div>
+          <button class="copy-btn" onclick="copyCode(this)">copiar</button>
+        </div>
+        <pre><span class="cm"># Banco em memória (útil para testes — não persiste)</span>
+conn_mem = sqlite3.<span class="fn">connect</span>(<span class="str">":memory:"</span>)
+
+<span class="cm"># Copia o banco do disco para a memória</span>
+conn_disco = sqlite3.<span class="fn">connect</span>(<span class="str">"biblioteca.db"</span>)
+conn_disco.<span class="fn">backup</span>(conn_mem)
+
+<span class="cm"># Exporta o SQL completo do banco (dump)</span>
+<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"backup_biblioteca.sql"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+    <span class="kw">for</span> linha <span class="kw">in</span> conn_disco.<span class="fn">iterdump</span>():
+        f.<span class="fn">write</span>(linha + <span class="str">"\n"</span>)
+
+<span class="kw">print</span>(<span class="str">"Backup gerado: backup_biblioteca.sql ✅"</span>)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── RESUMO ── -->
+  <section>
+    <div class="section-label">07 · Resumo</div>
+    <h2>O que você aprendeu hoje</h2>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="icon">🗄</div>
+        <strong>SQLite3 em profundidade</strong>
+        <span>Arquitetura, tipos, PRAGMAs</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔒</div>
+        <strong>Constraints</strong>
+        <span>NOT NULL, UNIQUE, CHECK, FK</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔍</div>
+        <strong>Introspecção</strong>
+        <span>sqlite_master, PRAGMA table_info</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📝</div>
+        <strong>CRUD completo</strong>
+        <span>INSERT, SELECT, UPDATE, DELETE</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🐼</div>
+        <strong>to_sql() + read_sql_query()</strong>
+        <span>Dados da Aula 01 persistidos</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📚</div>
+        <strong>livros.csv no banco</strong>
+        <span>Limpeza → SQLite → análise</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔗</div>
+        <strong>JOIN vs merge()</strong>
+        <span>Comparativo lado a lado</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📊</div>
+        <strong>Pivot: SQL vs Pandas</strong>
+        <span>CASE WHEN vs pivot_table()</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">⚡</div>
+        <strong>Índices</strong>
+        <span>CREATE INDEX para performance</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">🔐</div>
+        <strong>Transações</strong>
+        <span>BEGIN, COMMIT, ROLLBACK</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">📤</div>
+        <strong>Exportação</strong>
+        <span>Excel multi-aba com ExcelWriter</span>
+      </div>
+      <div class="summary-item">
+        <div class="icon">💾</div>
+        <strong>Backup & dump</strong>
+        <span>backup(), iterdump()</span>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div class="icon">🚀</div>
+      <p><strong>Próximos passos:</strong> Experimente o <strong>SQLAlchemy</strong> para uma camada de abstração ainda mais poderosa, e o <strong>DuckDB</strong> para análises analíticas em escala — ambos integram perfeitamente com Pandas. E quando precisar de um banco mais robusto para produção, o que você aprendeu aqui migra diretamente para o <strong>PostgreSQL</strong>.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="series">
+    <div class="series-item">Aula 01 · Pandas</div>
+    <div class="series-item">Aula 02 · CSV & Análise</div>
+    <div class="series-item current">Aula 03 · SQLite3 ←</div>
+    <div class="series-item">Aula 04 · SQLAlchemy</div>
+    <div class="series-item">Aula 05 · APIs & REST</div>
+  </div>
+  <div>Série Python para Dados · sqlite3 · Python 3.x · Pandas</div>
+</footer>
+
+<script>
+  // Copy code button
+  function copyCode(btn) {
+    const pre = btn.closest('.code-wrap').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copiado!';
+      btn.style.color = 'var(--accent2)';
+      btn.style.borderColor = 'var(--accent2)';
+      setTimeout(() => {
+        btn.textContent = 'copiar';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
+  }
+
+  // Animate cards on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.card, .info-box, .tip-box, .warn-box, .summary-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+
+  // Progress bar fill on load
+  document.querySelectorAll('.progress-step.done').forEach((el, i) => {
+    setTimeout(() => el.classList.add('done'), i * 120);
+  });
+</script>
+</body>
+</html>
